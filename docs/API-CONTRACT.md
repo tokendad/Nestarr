@@ -13,8 +13,8 @@ All API endpoints are prefixed with `/api/`. The app should let users configure 
 ## Authentication
 
 All protected endpoints require either:
-- **Cookie**: `access_token` (HttpOnly, set by `/api/auth/login`)
-- **Header**: `X-API-Key: <key>` (generated in user settings)
+- **Cookie**: `access_token` (HttpOnly, set by `POST /api/token`)
+- **Header**: `X-API-Key: <key>` (generated via `POST /api/users/me/api-key`)
 
 The API key approach is recommended for the mobile app.
 
@@ -142,13 +142,16 @@ Each entry in `paint_info` has:
 
 ---
 
-### Photos — `GET /api/photos/{item_id}`
+### Photos — `GET /api/items/{item_id}/photos/{photo_id}`
+
+Photos are nested under items. All photo endpoints follow the `/api/items/{item_id}/photos/...` pattern.
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | UUID string | |
 | `item_id` | UUID string | |
 | `path` | string | relative URL, prefix with server base URL |
+| `thumbnail_path` | string \| null | smaller preview image |
 | `is_primary` | boolean | |
 | `photo_type` | string \| null | see Photo Types below |
 | `uploaded_at` | datetime string | |
@@ -159,55 +162,255 @@ Each entry in `paint_info` has:
 
 ## Key Endpoints
 
+### Items
+
 ```
-GET    /api/items/                   List all items (paginated)
-POST   /api/items/                   Create item
-GET    /api/items/{id}               Get single item
-PUT    /api/items/{id}               Full update
-PATCH  /api/items/{id}               Partial update
-DELETE /api/items/{id}               Delete item
-GET    /api/items/{id}/collections   Collections containing this item (v7.0.0)
+GET    /api/items/                          List all items
+POST   /api/items/                          Create item
+GET    /api/items/{id}                      Get single item
+PUT    /api/items/{id}                      Full update
+DELETE /api/items/{id}                      Delete item
+POST   /api/items/{id}/enrich               Enrich item from web/UPC data
+POST   /api/items/bulk-delete               Delete multiple items
+POST   /api/items/bulk-update-tags          Bulk tag assignment
+POST   /api/items/bulk-update-location      Bulk location move
+GET    /api/items/{id}/collections          Collections containing this item (v7.0.0)
+```
 
-GET    /api/locations/               List all locations
-POST   /api/locations/               Create location
-GET    /api/locations/{id}           Get single location
-PUT    /api/locations/{id}           Update location
-DELETE /api/locations/{id}           Delete location
+### Locations
 
-POST   /api/auth/login               Login (returns HttpOnly cookie)
-POST   /api/auth/logout              Logout
-GET    /api/users/me                 Current user info
+```
+GET    /api/locations/                      List all locations
+POST   /api/locations/                      Create location
+GET    /api/locations/{id}                  Get single location
+PUT    /api/locations/{id}                  Update location
+DELETE /api/locations/{id}                  Delete location
+```
 
-GET    /api/photos/{item_id}         Photos for an item
-POST   /api/photos/{item_id}         Upload photo
-DELETE /api/photos/{photo_id}        Delete photo
+### Authentication
 
-GET    /api/maintenance/{item_id}    Maintenance tasks for item
-POST   /api/maintenance/             Create maintenance task
-PUT    /api/maintenance/{id}         Update task
-DELETE /api/maintenance/{id}         Delete task
+Login uses an OAuth2 password form (`Content-Type: application/x-www-form-urlencoded` with `username` + `password` fields). On success, an `access_token` HttpOnly cookie is set; the mobile app should use `X-API-Key` instead.
 
-GET    /api/tags/                    All tags
-POST   /api/items/{id}/tags          Add tag to item
+```
+POST   /api/token                           Login — returns HttpOnly cookie (OAuth2 form)
+POST   /api/auth/logout                     Logout — clears cookie
+GET    /api/auth/setup/status               First-run check (no auth required)
+GET    /api/auth/google/status              Whether Google OAuth is configured
+POST   /api/auth/google                     Authenticate via Google ID token
+GET    /api/auth/oidc/status                Whether OIDC is configured
+GET    /api/auth/oidc/login                 Redirect to OIDC provider
+POST   /api/auth/oidc/callback              OIDC provider callback
+```
 
-POST   /api/ai/detect-items          Room scan (AI item detection)
-POST   /api/ai/enrich-from-data-tags Parse data tag photo
-POST   /api/ai/barcode-lookup        UPC barcode lookup
+> **Note:** The legacy path `/token` (no `/api/` prefix) is also accepted for backward compatibility.
 
-GET    /api/printer/system/printers  List CUPS printers
-POST   /api/printer/print            Print label (NIIMBOT or CUPS)
+### Users
 
-# Collections (v7.0.0)
-GET    /api/collections/             List collections (?parent_id= / ?search=)
-GET    /api/collections/tree         Full hierarchy tree
-POST   /api/collections/             Create collection (editor+)
-GET    /api/collections/{id}         Get collection detail
-PUT    /api/collections/{id}         Update collection (editor+)
-DELETE /api/collections/{id}         Delete collection (?cascade=true) (admin)
-GET    /api/collections/{id}/items   Items in collection
-POST   /api/collections/{id}/items   Add items to collection (editor+, max 100)
-DELETE /api/collections/{id}/items/{item_id}  Remove item (editor+)
-POST   /api/collections/{id}/cover-image      Upload cover image (editor+)
+```
+GET    /api/users/me                        Current user info
+PATCH  /api/users/{id}                      Update user (admin or self)
+DELETE /api/users/{id}                      Delete user (admin)
+GET    /api/users                           List all users (admin)
+POST   /api/users/admin                     Create admin user (admin)
+POST   /api/users/setup/first-admin         Bootstrap first admin (no auth; setup only)
+GET    /api/users/pending                   Pending registrations (admin)
+POST   /api/users/{id}/approve              Approve registration (admin)
+POST   /api/users/{id}/reject               Reject registration (admin)
+PUT    /api/users/{id}/locations            Restrict user to locations (admin)
+GET    /api/users/{id}/locations            User's allowed locations (admin)
+POST   /api/users/me/api-key               Generate API key
+DELETE /api/users/me/api-key               Revoke API key
+POST   /api/users/me/set-password          Set/change password
+GET    /api/users/me/ai-schedule           Get AI valuation schedule
+PUT    /api/users/me/ai-schedule           Update AI valuation schedule
+GET    /api/users/me/upc-databases         Get UPC database config
+PUT    /api/users/me/upc-databases         Update UPC database config
+GET    /api/users/me/ai-providers          Get AI provider config
+PUT    /api/users/me/ai-providers          Update AI provider config
+```
+
+### Photos (nested under items)
+
+```
+POST   /api/items/{item_id}/photos                      Upload photo
+GET    /api/items/{item_id}/photos/{photo_id}           Get photo
+PATCH  /api/items/{item_id}/photos/{photo_id}           Update photo metadata
+DELETE /api/items/{item_id}/photos/{photo_id}           Delete photo
+```
+
+### Documents (nested under items)
+
+```
+POST   /api/items/{item_id}/documents                   Upload document
+DELETE /api/items/{item_id}/documents/{document_id}     Delete document
+POST   /api/items/{item_id}/documents/from-url          Attach document from URL
+```
+
+### Location Media
+
+```
+POST   /api/locations/{location_id}/photos              Upload location photo
+DELETE /api/locations/{location_id}/photos/{photo_id}   Delete location photo
+POST   /api/locations/{location_id}/videos              Upload location video
+DELETE /api/locations/{location_id}/videos/{video_id}   Delete location video
+```
+
+### Maintenance Tasks
+
+```
+GET    /api/maintenance/                    List all maintenance tasks
+POST   /api/maintenance/                    Create task
+GET    /api/maintenance/item/{item_id}      Tasks for a specific item
+GET    /api/maintenance/{id}                Get single task
+PUT    /api/maintenance/{id}                Update task
+DELETE /api/maintenance/{id}                Delete task
+```
+
+### Tags
+
+```
+GET    /api/tags/                           All tags
+POST   /api/tags/                           Create tag
+GET    /api/tags/{id}                       Get tag
+DELETE /api/tags/{id}                       Delete tag
+```
+
+Tags are assigned to items via `PUT /api/items/{id}` (include `tag_ids` in the item payload). There is no separate tag-assignment endpoint.
+
+### AI
+
+```
+GET    /api/ai/status                       AI configuration status
+GET    /api/ai/gemini-models                Available Gemini model versions
+POST   /api/ai/test-connection              Test AI provider connectivity
+POST   /api/ai/detect-items                 Room scan — AI item detection from photo
+POST   /api/ai/parse-data-tag               Parse data-tag label photo
+POST   /api/ai/parse-paint-label            Parse paint-can label photo
+POST   /api/ai/barcode-lookup               Single UPC/barcode lookup
+POST   /api/ai/barcode-lookup-multi         Bulk UPC lookup
+GET    /api/ai/upc-databases                Available UPC database options
+GET    /api/ai/ai-providers                 Available AI provider options
+POST   /api/ai/scan-qr                      QR code scan
+POST   /api/ai/scan-barcode                 Barcode scan
+POST   /api/ai/run-valuation                Run AI valuation on items
+POST   /api/ai/enrich-from-data-tags        Enrich items from data-tag photos
+```
+
+### Printer (NIIMBOT + CUPS)
+
+```
+GET    /api/printer/config                  Get printer config
+PUT    /api/printer/config                  Update printer config
+GET    /api/printer/status                  Printer connection status
+GET    /api/printer/models                  Supported NIIMBOT models
+POST   /api/printer/print-label             Print label (NIIMBOT or CUPS)
+POST   /api/printer/print-test-label        Print test label
+POST   /api/printer/test-connection         Test printer connection
+GET    /api/printer/system/available        Whether system printing is available
+GET    /api/printer/system/printers         List CUPS system printers
+POST   /api/printer/system/print            Print via CUPS (generic)
+POST   /api/printer/system/print-location   Print location label via CUPS
+POST   /api/printer/system/print-item       Print item label via CUPS
+GET    /api/printer/profiles/printer        List saved printer profiles
+POST   /api/printer/profiles/printer        Create printer profile
+DELETE /api/printer/profiles/printer/{id}   Delete printer profile
+GET    /api/printer/profiles/label          List saved label profiles
+POST   /api/printer/profiles/label          Create label profile
+PUT    /api/printer/profiles/label/{id}     Update label profile
+DELETE /api/printer/profiles/label/{id}     Delete label profile
+GET    /api/printer/config/active           Get active printer+label profile combo
+POST   /api/printer/config/activate         Set active printer+label profile combo
+```
+
+### Google Drive
+
+```
+GET    /api/gdrive/status                   GDrive connection status and last backup time
+POST   /api/gdrive/connect                  Authorize GDrive with OAuth code
+DELETE /api/gdrive/disconnect               Revoke GDrive access
+POST   /api/gdrive/backup                   Trigger manual backup
+GET    /api/gdrive/backups                  List available backups
+DELETE /api/gdrive/backups/{backup_id}      Delete a backup
+```
+
+### Settings & Status
+
+```
+GET    /api/status                          Server/DB health status
+GET    /api/config-status                   Configuration completeness
+PUT    /api/config-status/api-keys          Save AI/UPC API keys
+GET    /api/settings/                       System settings
+PUT    /api/settings/                       Update system settings
+GET    /api/settings/location-categories    Available location category options
+```
+
+### Collections (v7.0.0)
+
+```
+GET    /api/collections/                            List collections (?parent_id= / ?search=)
+GET    /api/collections/tree                        Full hierarchy tree
+POST   /api/collections/                            Create collection (editor+)
+GET    /api/collections/{id}                        Collection detail
+PUT    /api/collections/{id}                        Update collection (editor+)
+DELETE /api/collections/{id}                        Delete collection (?cascade=true) (admin)
+GET    /api/collections/{id}/items                  Items in collection
+POST   /api/collections/{id}/items                  Add items to collection (editor+, max 100)
+DELETE /api/collections/{id}/items/{item_id}        Remove item (editor+)
+POST   /api/collections/{id}/cover-image            Upload cover image (editor+)
+```
+
+### Plugins
+
+```
+GET    /api/plugins/                        List plugins
+GET    /api/plugins/{id}                    Get plugin
+POST   /api/plugins/                        Create plugin
+PUT    /api/plugins/{id}                    Update plugin
+DELETE /api/plugins/{id}                    Delete plugin
+POST   /api/plugins/{id}/test               Test plugin connection
+```
+
+### Import / Export
+
+```
+POST   /api/import/csv                      Bulk import items from CSV
+POST   /api/encircle/preview                Preview Encircle JSON import
+POST   /api/encircle                        Execute Encircle JSON import
+POST   /api/network/scan                    Scan network for NesVentory instances
+POST   /api/network/import                  Import items from discovered instance
+```
+
+### Media Management (admin)
+
+```
+GET    /api/media/stats                     Storage usage statistics
+GET    /api/media/list                      List all media files
+PATCH  /api/media/{media_id}               Update media metadata
+DELETE /api/media/bulk-delete               Delete orphaned/selected media files
+```
+
+### Logs (admin)
+
+```
+GET    /api/logs/files                      List log files
+GET    /api/logs/content/{file_name}        Read log file contents
+GET    /api/logs/settings                   Log level / retention settings
+PUT    /api/logs/settings                   Update log settings
+DELETE /api/logs/files                      Delete log files
+POST   /api/logs/rotate                     Force log rotation
+POST   /api/logs/cleanup                    Clean up old logs
+GET    /api/logs/issue-report               Generate diagnostics report
+```
+
+### Onboarding & Agents (internal)
+
+```
+POST   /api/onboarding/home                 Create default Home location (first-run)
+POST   /api/agents/categorize/predict       RL category prediction
+POST   /api/agents/categorize/feedback      Submit feedback for RL training
+GET    /api/agents/categorize/status        RL model status
+POST   /api/agents/categorize/seed          Seed RL training data
+DELETE /api/agents/categorize/reset         Reset RL model
 ```
 
 See `/api/openapi.json` for the full list with request/response schemas.
