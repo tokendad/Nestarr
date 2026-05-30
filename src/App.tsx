@@ -59,7 +59,17 @@ const App: React.FC = () => {
   const isMobile = useIsMobile();
   // Token is now stored in HttpOnly cookies - no need for localStorage
   // The token will be automatically sent with API requests
-  const [token, setToken] = useState<string | null>(true as any); // Indicate token exists in cookies
+  const [token, setToken] = useState<string | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  // Parsed once on mount from the URL hash (e.g. /#/item/:id  /#/location/:id)
+  const [deepLinkItemId] = useState<string | null>(() => {
+    const m = window.location.hash.match(/^#\/item\/([^/]+)$/);
+    return m ? m[1] : null;
+  });
+  const [deepLinkLocationId] = useState<string | null>(() => {
+    const m = window.location.hash.match(/^#\/location\/([^/]+)$/);
+    return m ? m[1] : null;
+  });
   const [userEmail, setUserEmail] = useState<string | undefined>(
     () => localStorage.getItem("NesVentory_user_email") || undefined
   );
@@ -89,6 +99,7 @@ const App: React.FC = () => {
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [showAIDetection, setShowAIDetection] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [oidcError, setOidcError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [setupStatus, setSetupStatus] = useState<"checking" | "required" | "done">("checking");
   const [showHomeWizard, setShowHomeWizard] = useState(false);
@@ -107,13 +118,35 @@ const App: React.FC = () => {
     return () => window.removeEventListener("auth:unauthorized", handleUnauthorized);
   }, []);
 
+  // Verify cookie-based session before rendering authenticated UI
+  useEffect(() => {
+    getCurrentUser()
+      .then((user) => {
+        setCurrentUser(user);
+        const safeUser = {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name || "",
+          role: user.role,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+        };
+        localStorage.setItem("NesVentory_currentUser", JSON.stringify(safeUser));
+        if (user.email) setUserEmail(user.email);
+        setToken("authenticated");
+      })
+      .catch(() => {
+        localStorage.removeItem("NesVentory_currentUser");
+      })
+      .finally(() => setSessionChecked(true));
+  }, []);
+
   useEffect(() => {
     checkSetupStatus()
       .then((status) => {
         setSetupStatus(status.setup_required ? "required" : "done");
       })
       .catch(() => {
-        // If the endpoint fails, assume setup is done and let normal auth handle it
         setSetupStatus("done");
       });
   }, []);
@@ -196,6 +229,20 @@ const App: React.FC = () => {
         .catch(() => {});
     }
   }, [currentUser, token, setupStatus]);
+
+  // Deep-link: open item details after items finish loading
+  useEffect(() => {
+    if (!deepLinkItemId || itemsLoading || !items.length) return;
+    const target = items.find((i) => i.id.toString() === deepLinkItemId);
+    if (target) {
+      setSelectedItem(target);
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+    }
+  }, [deepLinkItemId, items, itemsLoading]);
 
   // After locations load, show home wizard if admin has none yet.
   useEffect(() => {
@@ -365,7 +412,7 @@ const App: React.FC = () => {
       })
     : items;
 
-  if (setupStatus === "checking") {
+  if (setupStatus === "checking" || !sessionChecked) {
     return (
       <div className="app-root" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
         <span style={{ color: "var(--muted)", fontSize: "0.95rem" }}>Loading…</span>
@@ -403,11 +450,8 @@ const App: React.FC = () => {
           }}
           onError={(error) => {
             console.error("OIDC Login Error:", error);
-            // Clear query params to remove code and show login form with error
             window.history.replaceState({}, document.title, window.location.pathname);
-            // We can't easily pass error to LoginForm without state lifting or context, 
-            // but clearing code will render LoginForm.
-            alert(`Login failed: ${error}`); // Simple fallback
+            setOidcError(error);
           }}
         />
       );
@@ -434,19 +478,13 @@ const App: React.FC = () => {
         ) : (
           <div>
             {registrationSuccess && (
-              <div style={{
-                position: "fixed",
-                top: "1rem",
-                left: "50%",
-                transform: "translateX(-50%)",
-                backgroundColor: "#4caf50",
-                color: "white",
-                padding: "1rem 2rem",
-                borderRadius: "4px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                zIndex: 1000
-              }}>
+              <div className="success-banner" style={{ maxWidth: "390px", margin: "0 auto 0.75rem" }}>
                 Registration successful! Please log in.
+              </div>
+            )}
+            {oidcError && (
+              <div className="error-banner" style={{ maxWidth: "390px", margin: "0 auto 0.75rem" }}>
+                Login failed: {oidcError}
               </div>
             )}
             <LoginForm
@@ -454,6 +492,7 @@ const App: React.FC = () => {
                 setToken(newToken);
                 setUserEmail(email);
                 setRegistrationSuccess(false);
+                setOidcError(null);
               }}
               onRegisterClick={() => {
                 setShowRegisterForm(true);
@@ -470,7 +509,7 @@ const App: React.FC = () => {
   }
 
   const sidebar = (
-    <nav className="sidebar-nav">
+    <nav className="sidebar-nav" aria-label="Main navigation">
       <button
         className={view === "inventory" ? "nav-link active" : "nav-link"}
         onClick={() => setView("inventory")}
@@ -571,6 +610,7 @@ const App: React.FC = () => {
             onBulkUpdateLocation={handleBulkUpdateLocation}
             tags={tags}
             isMobile={isMobile}
+            initialLocationId={deepLinkLocationId || undefined}
           />
         )}
         {view === "media" && <MediaManagement />}

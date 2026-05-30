@@ -34,6 +34,7 @@ interface InventoryPageProps {
   onBulkUpdateLocation?: (itemIds: string[], locationId: string | null) => Promise<void>;
   tags?: Tag[];
   isMobile?: boolean;
+  initialLocationId?: string;
 }
 
 // Column configuration type
@@ -86,6 +87,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
   onBulkUpdateLocation,
   tags = [],
   isMobile = false,
+  initialLocationId,
 }) => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [itemLimit, setItemLimit] = useState<number>(10);
@@ -113,6 +115,21 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
     }
     loadCategories();
   }, []);
+
+  // Deep-link: open a location's settings panel when initialLocationId is provided
+  useEffect(() => {
+    if (!initialLocationId || locationsLoading || !locations.length) return;
+    const target = locations.find((l) => l.id.toString() === initialLocationId);
+    if (target) {
+      setShowLocationSettings(target);
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+    }
+  }, [initialLocationId, locations, locationsLoading]);
+
   const [showImportMenu, setShowImportMenu] = useState(false);
   const [columns, setColumns] = useState<ColumnConfig[]>(
     () => {

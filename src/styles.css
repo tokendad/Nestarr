@@ -194,27 +194,6 @@ body {
   width: auto;
 }
 
-.logo-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, #f97316, #ec4899 40%, #22d3ee);
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.6),
-    0 0 16px rgba(56, 189, 248, 0.8);
-}
-
-.logo-dot.large {
-  width: 20px;
-  height: 20px;
-}
-
-.app-title {
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
 
 .app-header-right {
   display: flex;
@@ -768,22 +747,8 @@ tbody tr:hover {
     min-height: 50px;
   }
 
-  .app-title {
-    font-size: 0.8rem;
-  }
-
   .app-logo {
     height: 28px;
-  }
-
-  .logo-dot {
-    width: 12px;
-    height: 12px;
-  }
-
-  .logo-dot.large {
-    width: 16px;
-    height: 16px;
   }
 
   /* Main content padding */
@@ -1045,8 +1010,9 @@ tbody tr:hover {
 .modal-actions,
 .panel-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-panel);
 }
@@ -1216,7 +1182,7 @@ tbody tr:hover {
 .warranty-separator {
   margin: 1rem 0;
   border: none;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* Photos Grid Styles */
@@ -1420,7 +1386,7 @@ tbody tr:hover {
 .data-tag-additional {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .data-tag-additional .field-label {
@@ -1440,7 +1406,7 @@ tbody tr:hover {
 .additional-field {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-elevated);
   border-radius: 0.25rem;
   color: var(--text);
 }
@@ -1457,7 +1423,7 @@ tbody tr:hover {
   justify-content: flex-end;
   gap: 0.5rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .data-tag-actions button {
@@ -1561,7 +1527,7 @@ tbody tr:hover {
   justify-content: flex-end;
   gap: 0.5rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .barcode-result-actions button {
@@ -1575,7 +1541,7 @@ tbody tr:hover {
   font-size: 0.8rem;
   margin-bottom: 0.75rem;
   padding: 0.35rem 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-elevated);
   border-radius: 0.25rem;
 }
 
@@ -1635,7 +1601,7 @@ tbody tr:hover {
   color: var(--bg);
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: capitalize;
   letter-spacing: 0.05em;
@@ -1738,7 +1704,7 @@ tbody tr:hover {
   color: var(--bg);
   padding: 0.15rem 0.4rem;
   border-radius: 0.25rem;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: capitalize;
 }
@@ -1837,14 +1803,6 @@ tbody tr:hover {
   font-size: 0.9rem;
   color: var(--accent);
   font-weight: 600;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  margin-top: 1rem;
-  border-top: 1px solid var(--border-subtle);
 }
 
 /* Tag Selection Styles */
@@ -2071,13 +2029,19 @@ tbody tr:hover {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  user-select: none;
   font-size: 0.9rem;
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: 1rem;
-  height: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--accent);
   cursor: pointer;
+}
+
+.checkbox-label span {
+  color: var(--text);
 }
 
 /* Import Result Styles */
@@ -2213,25 +2177,6 @@ tbody tr:hover {
   margin-bottom: 0.75rem;
   color: var(--accent);
   font-size: 0.9rem;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.5rem 0;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent);
-}
-
-.checkbox-label span {
-  font-size: 0.9rem;
-  color: var(--text);
 }
 
 /* Profile photo styling */
@@ -2682,7 +2627,7 @@ tbody tr:hover {
   padding: 0.125rem 0.35rem;
   border-radius: 4px;
   color: #fff;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 600;
 }
 
@@ -3122,7 +3067,7 @@ tbody tr:hover {
 
   /* Make help text smaller */
   .item-form-tabbed .help-text {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     margin-top: 0.1rem;
   }
 
@@ -3912,7 +3857,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   height: auto;
   background: var(--text-muted);
   color: white;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   padding: 0 3px;
   border-radius: 3px;
 }
@@ -4155,7 +4100,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .weekly-task-item {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   color: var(--muted);
 }
 
@@ -4521,31 +4466,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   align-items: center;
 }
 
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.checkbox-label span {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-panel);
 }
 
 .photo-item.clickable:hover {
@@ -4906,7 +4832,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   display: inline-flex;
   align-items: center;
   padding: 0.05rem 0.35rem;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   border-radius: 999px;

@@ -57,7 +57,8 @@ const Layout: React.FC<LayoutProps> = ({
           {onSearchChange && (
             <div className="header-search">
               <input
-                type="text"
+                type="search"
+                aria-label="Search items"
                 placeholder="🔍 Search items..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
@@ -67,9 +68,12 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
         <div className="app-header-right">
           {!isMobile && (userName || userEmail) && (
-            <span 
-              className="user-email" 
+            <span
+              className="user-email"
               onClick={onUserClick}
+              onKeyDown={onUserClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onUserClick(); } } : undefined}
+              tabIndex={onUserClick ? 0 : undefined}
+              role={onUserClick ? "button" : undefined}
               style={{ cursor: onUserClick ? "pointer" : "default" }}
               title="Click to edit profile"
             >
@@ -88,8 +92,9 @@ const Layout: React.FC<LayoutProps> = ({
           />
         )}
         {/* Sidebar - always rendered but conditionally visible on mobile */}
-        <aside 
+        <aside
           className={`app-sidebar ${isMobile ? 'mobile' : ''} ${mobileMenuOpen ? 'open' : ''}`}
+          aria-label="Primary navigation"
           onClick={(e) => {
             // Close menu when clicking a nav link on mobile
             const target = e.target;
