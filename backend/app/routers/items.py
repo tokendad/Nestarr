@@ -15,6 +15,14 @@ router = APIRouter(prefix="/items", tags=["items"])
 MAX_ERROR_MESSAGE_LENGTH = 100
 
 
+def _is_home_location(location: "models.Location") -> bool:
+    """Return True if this location can hold living items (people/pets)."""
+    if location.is_primary_location:
+        return True
+    cat = (location.location_category or "").lower()
+    return cat in ("home", "primary")
+
+
 @router.get("/", response_model=List[schemas.Item])
 def list_items(
     is_living: Optional[bool] = Query(None, description="Filter by living items"),
@@ -91,19 +99,27 @@ def create_item(
     tag_ids = payload.tag_ids
     payload_dict = payload.model_dump(exclude={'tag_ids'})
     
-    # Validate living items (people/pets) are assigned to Home location
+    # Validate living items (people/pets) are assigned to a home-type location
     if payload_dict.get('is_living') and payload_dict.get('relationship_type') != 'plant':
         location_id = payload_dict.get('location_id')
         if location_id:
             location = db.query(models.Location).filter(models.Location.id == location_id).first()
-            if location and location.name != "Home":
+            if location and not _is_home_location(location):
                 raise HTTPException(
                     status_code=400,
                     detail="People and pets must be assigned to the 'Home' location"
                 )
         else:
-            # Auto-assign to Home if no location specified
-            home_location = db.query(models.Location).filter(models.Location.name == "Home").first()
+            # Auto-assign to first home-type location if no location specified
+            home_location = (
+                db.query(models.Location)
+                .filter(
+                    models.Location.is_primary_location == True  # noqa: E712
+                )
+                .first()
+            ) or db.query(models.Location).filter(
+                models.Location.location_category.in_(["home", "Primary"])
+            ).first()
             if home_location:
                 payload_dict['location_id'] = home_location.id
     
@@ -176,7 +192,7 @@ def update_item(
             location_id = data.get('location_id', item.location_id)
             if location_id:
                 location = db.query(models.Location).filter(models.Location.id == location_id).first()
-                if location and location.name != "Home":
+                if location and not _is_home_location(location):
                     raise HTTPException(
                         status_code=400,
                         detail="People and pets must be assigned to the 'Home' location"
@@ -347,8 +363,8 @@ def bulk_update_location(
     
     items = db.query(models.Item).filter(models.Item.id.in_(payload.item_ids)).all()
     
-    # SECURITY: Validate living items location constraint
-    if location and location.name != "Home":
+    # Validate living items location constraint
+    if location and not _is_home_location(location):
         living_people_or_pets = [
             item for item in items 
             if item.is_living and item.relationship_type != 'plant'
