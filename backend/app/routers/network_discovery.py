@@ -158,7 +158,7 @@ def _match_existing_items(
             rows = db.execute(
                 text(
                     "SELECT id, name FROM items "
-                    "WHERE additional_info LIKE :mac AND deleted_at IS NULL"
+                    "WHERE additional_info LIKE :mac"
                 ),
                 {"mac": f"%{mac_upper}%"},
             ).fetchall()
@@ -172,7 +172,7 @@ def _match_existing_items(
             rows = db.execute(
                 text(
                     "SELECT id, name FROM items "
-                    "WHERE additional_info LIKE :ip AND deleted_at IS NULL"
+                    "WHERE additional_info LIKE :ip"
                 ),
                 {"ip": f"%IP Address%{device.ip}%"},
             ).fetchall()
@@ -315,7 +315,6 @@ def import_devices(
                     continue
                 item = db.query(models.Item).filter(
                     models.Item.id == entry.item_id,
-                    models.Item.deleted_at.is_(None),
                 ).first()
                 if not item:
                     errors.append(f"Item {entry.item_id} not found for update")
