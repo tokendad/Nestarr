@@ -269,7 +269,6 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
   const [categoryAgentError, setCategoryAgentError] = useState<string | null>(null);
   const [categoryAgentResetting, setCategoryAgentResetting] = useState(false);
   const [categoryAgentResetSuccess, setCategoryAgentResetSuccess] = useState<string | null>(null);
-  const [pluginGeminiBannerDismissed, setPluginGeminiBannerDismissed] = useState(false);
 
 
   async function loadUsers() {
@@ -3411,43 +3410,16 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
         </button>
       </div>
 
-      {/* Plugin-Gemini deprecation banner */}
-      {!pluginGeminiBannerDismissed &&
-        plugins.some(p => /plugin-gemini/i.test(p.endpoint_url)) && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.75rem',
-            padding: '0.85rem 1rem',
-            borderRadius: '6px',
-            background: '#fffbea',
-            border: '1px solid #f0c000',
-            marginBottom: '1.25rem',
-            fontSize: '0.875rem',
-          }}>
-            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>⚠️</span>
-            <div style={{ flex: 1 }}>
-              <strong>Plugin-Gemini detected:</strong> The built-in Department 56 Category Agent now
-              provides equivalent functionality. You can safely remove this plugin from the list below.
-            </div>
-            <button
-              type="button"
-              onClick={() => setPluginGeminiBannerDismissed(true)}
-              aria-label="Dismiss warning"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#888',
-                fontSize: '1rem',
-                flexShrink: 0,
-                padding: '0 0.25rem',
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        )}
+      {/* Plugin system deprecation banner — always visible, non-dismissible */}
+      <div className="info-banner" style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
+        <span style={{ flexShrink: 0 }}>⚠️</span>
+        <div>
+          <strong>The Plugin system is deprecated</strong> and will be removed in a future major release.
+          The functionality originally provided by external plugins is now available through the
+          built-in <strong>Category Agent</strong> and <strong>Gemini AI</strong> provider (Admin → AI Settings).
+          Existing plugins will continue to function until removal — no action is required right now.
+        </div>
+      </div>
 
       {pluginsError && (
         <div className="error-message" style={{ marginBottom: '1rem' }}>

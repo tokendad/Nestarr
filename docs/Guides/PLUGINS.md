@@ -1,5 +1,10 @@
 # Custom LLM Plugin System
 
+> **⚠️ Deprecated:** The Plugin system is no longer under active development and will be
+> removed in a future major release. For AI-powered item identification, use the
+> built-in Category Agent or configure a Gemini API key in **Admin → AI Settings**.
+> Existing plugins will continue to function until removal.
+
 > **⚠️ IMPORTANT: Getting 404 errors?** Your plugin Docker image is likely outdated. The `/nesventory/identify/image` endpoint was added in December 2025. Even if you re-cloned the plugin code, you must rebuild or pull the latest Docker image. Jump to [Troubleshooting](#troubleshooting) for the fix.
 
 NesVentory supports custom LLM (Large Language Model) plugins that can be used for AI-powered features such as data tag parsing and barcode lookup. This allows you to integrate specialized or pre-trained models that may be better suited for your specific needs.

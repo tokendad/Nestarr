@@ -1,4 +1,25 @@
 # Changelog
+n## [Unreleased] - 2026-05-30
+### Deprecated
+- **Plugin system** formally deprecated. The functionality originally provided by external LLM plugins
+  is now available through the built-in Department 56 Category Agent and Gemini AI provider.
+  The admin UI now displays a permanent deprecation notice. Backend code and existing plugin
+  configurations remain intact and functional. Removal is planned for the next major release.
+
+### Fixed
+- QR code deep links (`/#/item/:id`, `/#/location/:id`) now correctly navigate to the target
+  item or location after login and data load instead of always landing on the dashboard.
+- People and pets can now be added to primary home locations with any name, not only locations
+  named exactly "Home". Affects Living Items tab in location editor.
+- Replaced `alert()` for OIDC login errors with an inline error banner.
+- Auth flash: app no longer briefly shows the authenticated UI before verifying the session cookie.
+- Multiple CSS fixes: dark-mode-only `rgba(255,255,255,…)` colours replaced with CSS variables
+  so data-tag and barcode result sections render correctly in light theme.
+- Duplicate `.checkbox-label` and `.modal-actions` CSS definitions consolidated; fixes undefined
+  `--text-primary` and `--border-color` variable references.
+- Raised badge/label font sizes from `0.65rem` to `0.7rem` for readability.
+- Removed dead `.logo-dot` and `.app-title` CSS (unused since header redesign).
+
 n## [7.1.1] - 2026-05-14
 ### Fixed
 - Automated release 7.1.1

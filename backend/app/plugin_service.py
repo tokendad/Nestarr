@@ -1,3 +1,7 @@
+# DEPRECATED: The Plugin system is scheduled for removal in a future major release.
+# It has been superseded by the built-in Category Agent and Gemini AI provider.
+# Do not add new features to this module.
+
 """
 Plugin service for calling custom LLM endpoints.
 
