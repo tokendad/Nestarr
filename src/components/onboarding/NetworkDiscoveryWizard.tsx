@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   scanNetwork,
   importNetworkDevices,
@@ -11,6 +11,10 @@ import {
 interface Location {
   id: string;
   name: string;
+  friendly_name?: string | null;
+  is_primary_location?: boolean;
+  location_category?: string | null;
+  parent_id?: string | null;
 }
 
 interface Props {
@@ -28,6 +32,7 @@ interface DeviceRow {
   device: DiscoveredDevice;
   action: DeviceAction;
   customName: string;
+  roomLocationId: string | null;
 }
 
 const DEVICE_ICONS: Record<string, string> = {
@@ -77,6 +82,20 @@ export default function NetworkDiscoveryWizard({
   const [importError, setImportError] = useState("");
   const [allChecked, setAllChecked] = useState(true);
 
+  // Primary-only locations for Step 1 selector (fall back to all if none tagged)
+  const primaryLocations = useMemo(() => {
+    const filtered = locations.filter(
+      (l) => l.is_primary_location || (l.location_category || "").toLowerCase() === "primary"
+    );
+    return filtered.length > 0 ? filtered : locations;
+  }, [locations]);
+
+  // Child rooms of the selected primary location for per-device assignment
+  const roomLocations = useMemo(
+    () => locations.filter((l) => l.parent_id?.toString() === locationId),
+    [locations, locationId]
+  );
+
   // Pre-populate location when defaultLocationId arrives after mount
   useEffect(() => {
     if (defaultLocationId) setLocationId(defaultLocationId);
@@ -93,6 +112,7 @@ export default function NetworkDiscoveryWizard({
         device: d,
         action: d.existing_item_id ? "skip" : "create",
         customName: defaultName(d),
+        roomLocationId: null,
       }));
       setRows(initialRows);
       setStep(3);
@@ -126,6 +146,10 @@ export default function NetworkDiscoveryWizard({
     setRows((prev) => prev.map((r) => (r.device.ip === ip ? { ...r, customName: name } : r)));
   }
 
+  function setRowRoom(ip: string, roomId: string | null) {
+    setRows((prev) => prev.map((r) => (r.device.ip === ip ? { ...r, roomLocationId: roomId } : r)));
+  }
+
   async function doImport() {
     if (!locationId) return;
     setImporting(true);
@@ -135,6 +159,7 @@ export default function NetworkDiscoveryWizard({
       device: r.device,
       item_id: r.device.existing_item_id || undefined,
       item_name: r.customName || undefined,
+      location_id: r.roomLocationId || undefined,
     }));
     try {
       const result = await importNetworkDevices({ location_id: locationId, devices: payload });
@@ -170,7 +195,7 @@ export default function NetworkDiscoveryWizard({
 
   // ── Step 1: Setup ─────────────────────────────────────────────────────────
   function renderStep1() {
-    const showLocationPicker = locations.length > 1;
+    const showLocationPicker = primaryLocations.length > 1;
     return (
       <>
         <div className="wizard-header">
@@ -197,16 +222,16 @@ export default function NetworkDiscoveryWizard({
           {showLocationPicker && (
             <div style={{ marginBottom: "1rem" }}>
               <label style={{ display: "block", fontWeight: 600, marginBottom: "0.35rem", fontSize: "0.9rem" }}>
-                Assign discovered devices to location
+                Home
               </label>
               <select
                 value={locationId}
                 onChange={(e) => setLocationId(e.target.value)}
                 style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "6px", border: "1px solid var(--border-color, #d1d5db)" }}
               >
-                {locations.map((l) => (
+                {primaryLocations.map((l) => (
                   <option key={l.id} value={l.id}>
-                    {l.name}
+                    {l.friendly_name || l.name}
                   </option>
                 ))}
               </select>
@@ -281,7 +306,7 @@ export default function NetworkDiscoveryWizard({
             Scanning your network for connected devices…
           </p>
           <p style={{ fontSize: "0.85rem", color: "var(--muted, #6b7280)" }}>
-            This may take up to 60 seconds depending on the size of your network.
+            This may take up to 90 seconds depending on the size of your network.
           </p>
         </div>
       </>
@@ -441,36 +466,18 @@ export default function NetworkDiscoveryWizard({
                   {/* Action controls */}
                   <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", paddingLeft: "1.75rem", flexWrap: "wrap" }}>
                     {!isTracked && (
-                      <>
-                        <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", cursor: "pointer" }}>
-                          <input
-                            type="radio"
-                            name={`action-${device.ip}`}
-                            checked={row.action === "create"}
-                            onChange={() => setRowAction(device.ip, "create")}
-                          />
-                          Add
-                        </label>
-                        {row.action === "create" && (
-                          <input
-                            type="text"
-                            value={row.customName}
-                            onChange={(e) => setRowName(device.ip, e.target.value)}
-                            style={{
-                              fontSize: "0.8rem",
-                              padding: "2px 6px",
-                              borderRadius: "4px",
-                              border: "1px solid var(--border-color, #d1d5db)",
-                              flex: 1,
-                              minWidth: "120px",
-                            }}
-                            placeholder="Item name"
-                          />
-                        )}
-                      </>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.875rem", cursor: "pointer" }}>
+                        <input
+                          type="radio"
+                          name={`action-${device.ip}`}
+                          checked={row.action === "create"}
+                          onChange={() => setRowAction(device.ip, "create")}
+                        />
+                        Add
+                      </label>
                     )}
                     {isTracked && (
-                      <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", cursor: "pointer" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.875rem", cursor: "pointer" }}>
                         <input
                           type="radio"
                           name={`action-${device.ip}`}
@@ -480,7 +487,7 @@ export default function NetworkDiscoveryWizard({
                         Update ({device.existing_item_name})
                       </label>
                     )}
-                    <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem", cursor: "pointer" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.875rem", cursor: "pointer" }}>
                       <input
                         type="radio"
                         name={`action-${device.ip}`}
@@ -490,6 +497,67 @@ export default function NetworkDiscoveryWizard({
                       Skip
                     </label>
                   </div>
+
+                  {/* Device name + room selector — shown when adding or updating */}
+                  {row.action !== "skip" && (
+                    <div style={{ paddingLeft: "1.75rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                      {!isTracked && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                          <label
+                            htmlFor={`name-${device.ip}`}
+                            style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--muted, #6b7280)" }}
+                          >
+                            Device Name
+                          </label>
+                          <input
+                            id={`name-${device.ip}`}
+                            type="text"
+                            value={row.customName}
+                            onChange={(e) => setRowName(device.ip, e.target.value)}
+                            style={{
+                              fontSize: "0.875rem",
+                              padding: "0.4rem 0.6rem",
+                              borderRadius: "4px",
+                              border: "1px solid var(--border-color, #d1d5db)",
+                              width: "100%",
+                              boxSizing: "border-box",
+                            }}
+                            placeholder="Device name"
+                          />
+                        </div>
+                      )}
+                      {roomLocations.length > 0 && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                          <label
+                            htmlFor={`room-${device.ip}`}
+                            style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--muted, #6b7280)" }}
+                          >
+                            Assign to Room <span style={{ fontWeight: 400 }}>(optional)</span>
+                          </label>
+                          <select
+                            id={`room-${device.ip}`}
+                            value={row.roomLocationId || ""}
+                            onChange={(e) => setRowRoom(device.ip, e.target.value || null)}
+                            style={{
+                              fontSize: "0.875rem",
+                              padding: "0.4rem 0.6rem",
+                              borderRadius: "4px",
+                              border: "1px solid var(--border-color, #d1d5db)",
+                              width: "100%",
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            <option value="">— Primary location —</option>
+                            {roomLocations.map((r) => (
+                              <option key={r.id} value={r.id}>
+                                {r.friendly_name || r.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -971,8 +971,9 @@ class NetworkScanResponse(BaseModel):
 class NetworkImportDevice(BaseModel):
     action: str  # "create", "update", or "skip"
     device: DiscoveredDevice
-    item_id: Optional[str] = None   # for "update" action
-    item_name: Optional[str] = None # custom name override for "create"
+    item_id: Optional[str] = None    # for "update" action
+    item_name: Optional[str] = None  # custom name override for "create"
+    location_id: Optional[str] = None  # per-device room override; falls back to request-level location_id
 
 
 class NetworkImportRequest(BaseModel):

@@ -5,11 +5,14 @@ Admin-only endpoints. Requires nmap to be installed on the host (included in Doc
 For MAC address collection, the container must run with --cap-add=NET_RAW or equivalent.
 Without NET_RAW the scan degrades gracefully: returns IP/hostname only, no MAC/vendor.
 """
+import asyncio
 import ipaddress
 import re
 import socket
 import time
 from typing import Optional
+
+SCAN_TIMEOUT_SECONDS = 90
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
@@ -141,31 +144,47 @@ def _match_existing_items(
     devices: list[schemas.DiscoveredDevice], db: Session
 ) -> list[schemas.DiscoveredDevice]:
     """
-    For each device with a MAC address, check whether any existing Item has
-    that MAC stored in its additional_info JSON column.
-    Returns the same list with existing_item_id / existing_item_name populated.
+    Populate existing_item_id/name for devices already in inventory.
+    Primary match: MAC address (requires NET_RAW capability).
+    Fallback match: IP address label in additional_info (works without NET_RAW,
+    prevents duplicate imports on re-scan).
     """
     for device in devices:
-        if not device.mac:
-            continue
-        mac_upper = device.mac.upper()
-        # SQLite stores JSON as text; use LIKE for substring match
-        rows = db.execute(
-            text(
-                "SELECT id, name FROM items "
-                "WHERE additional_info LIKE :mac AND deleted_at IS NULL"
-            ),
-            {"mac": f"%{mac_upper}%"},
-        ).fetchall()
-        if rows:
-            device.existing_item_id = str(rows[0][0])
-            device.existing_item_name = rows[0][1]
+        matched = False
+
+        # Primary: MAC-based match
+        if device.mac:
+            mac_upper = device.mac.upper()
+            rows = db.execute(
+                text(
+                    "SELECT id, name FROM items "
+                    "WHERE additional_info LIKE :mac AND deleted_at IS NULL"
+                ),
+                {"mac": f"%{mac_upper}%"},
+            ).fetchall()
+            if rows:
+                device.existing_item_id = str(rows[0][0])
+                device.existing_item_name = rows[0][1]
+                matched = True
+
+        # Fallback: IP-based match (catches re-scans when MAC unavailable)
+        if device.ip and not matched:
+            rows = db.execute(
+                text(
+                    "SELECT id, name FROM items "
+                    "WHERE additional_info LIKE :ip AND deleted_at IS NULL"
+                ),
+                {"ip": f"%IP Address%{device.ip}%"},
+            ).fetchall()
+            if rows:
+                device.existing_item_id = str(rows[0][0])
+                device.existing_item_name = rows[0][1]
 
     return devices
 
 
 @router.post("/scan", response_model=schemas.NetworkScanResponse)
-def scan_network(
+async def scan_network(
     req: schemas.NetworkScanRequest,
     _admin: models.User = Depends(_require_admin),
     db: Session = Depends(get_db),
@@ -180,7 +199,24 @@ def scan_network(
         subnet = _auto_detect_subnet()
 
     t0 = time.time()
-    devices, method = _scan_network(subnet)
+    loop = asyncio.get_event_loop()
+    try:
+        devices, method = await asyncio.wait_for(
+            loop.run_in_executor(None, _scan_network, subnet),
+            timeout=SCAN_TIMEOUT_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        return schemas.NetworkScanResponse(
+            subnet_scanned=subnet,
+            scan_duration_seconds=round(time.time() - t0, 2),
+            devices_found=0,
+            devices=[],
+            scan_method="timeout",
+            error=(
+                f"Scan timed out after {SCAN_TIMEOUT_SECONDS} seconds. "
+                "Try specifying a smaller subnet (e.g. 192.168.1.0/24)."
+            ),
+        )
     duration = round(time.time() - t0, 2)
 
     if method not in ("nmap", "nmap-error"):
@@ -246,6 +282,9 @@ def import_devices(
             if dev.services:
                 additional_info.append({"label": "Services", "value": ", ".join(dev.services)})
 
+            # Per-device location override; fall back to request-level location
+            effective_location_id = entry.location_id or req.location_id
+
             if entry.action == "create":
                 name = (
                     entry.item_name
@@ -261,7 +300,7 @@ def import_devices(
                     brand=(dev.manufacturer or "")[:255] if dev.manufacturer else None,
                     model_number=dev.device_type_guess,
                     description=" ".join(description_parts),
-                    location_id=req.location_id,
+                    location_id=effective_location_id,
                     additional_info=additional_info or None,
                     owner_id=current_user.id,
                 )

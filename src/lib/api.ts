@@ -3047,6 +3047,7 @@ export interface NetworkImportDevice {
   device: DiscoveredDevice;
   item_id?: string;
   item_name?: string;
+  location_id?: string;  // per-device room override
 }
 
 export interface NetworkImportRequest {
