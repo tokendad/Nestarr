@@ -1,4 +1,9 @@
 # Changelog
+n## [7.1.2] - 2026-05-31
+### Fixed
+- Automated release 7.1.2
+- Tags: Bug Fix
+
 n## [Unreleased] - 2026-05-30
 ### Deprecated
 - **Plugin system** formally deprecated. The functionality originally provided by external LLM plugins
