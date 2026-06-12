@@ -216,8 +216,14 @@ class AIStatusResponse(BaseModel):
     """Schema for AI feature status."""
     enabled: bool
     model: Optional[str] = None
+    provider: Optional[str] = None  # 'gemini' | 'openai_compat'
     plugins_enabled: bool = False
     plugin_count: int = 0
+
+
+class LocalLLMModelsResponse(BaseModel):
+    """Schema for the local LLM provider's model list."""
+    models: List[str]
 
 
 class DataTagInfo(BaseModel):
@@ -547,21 +553,19 @@ def get_ai_status(db: Session = Depends(get_db)):
     Check if AI detection feature is enabled and configured.
     Checks both environment variables and database settings, as well as custom LLM plugins.
     """
-    from ..settings_service import get_effective_gemini_model
+    from .. import llm_service
 
-    gemini_api_key = get_effective_gemini_api_key(db)
-    is_enabled = bool(gemini_api_key)
+    provider_info = llm_service.get_active_provider_info(db)
+    is_enabled = provider_info["provider"] is not None
 
     # Check for enabled plugins
     from ..plugin_service import get_enabled_ai_scan_plugins
     plugins = get_enabled_ai_scan_plugins(db)
 
-    # Get the effective model
-    gemini_model = get_effective_gemini_model(db) if is_enabled else None
-
     return AIStatusResponse(
-        enabled=is_enabled or len(plugins) > 0,  # Enabled if Gemini OR plugins are configured
-        model=gemini_model,
+        enabled=is_enabled or len(plugins) > 0,  # Enabled if a provider OR plugins are configured
+        model=provider_info["model"],
+        provider=provider_info["provider"],
         plugins_enabled=len(plugins) > 0,
         plugin_count=len(plugins)
     )
@@ -627,6 +631,53 @@ async def list_gemini_models(
     filtered.sort(key=lambda m: m.display_name)
 
     return schemas.GeminiModelsResponse(models=filtered, source="live")
+
+
+@router.get("/llm-models", response_model=LocalLLMModelsResponse)
+async def list_local_llm_models(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Fetch the model list from the configured local/OpenAI-compatible LLM provider
+    via GET {base_url}/models (supported by Ollama, vLLM, LM Studio, etc.).
+    """
+    from .. import llm_service
+
+    try:
+        model_ids = await llm_service.list_local_models(db)
+    except llm_service.LLMNotConfiguredError:
+        raise HTTPException(
+            status_code=400,
+            detail="LLM base URL is not configured. Save a base URL first."
+        )
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=504,
+            detail="Timed out fetching the model list. Check that the LLM server is running."
+        )
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code in (401, 403):
+            raise HTTPException(
+                status_code=400,
+                detail="Authentication failed. Check the API key."
+            )
+        raise HTTPException(
+            status_code=502,
+            detail=f"LLM server returned unexpected status {e.response.status_code}."
+        )
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=502,
+            detail="Could not reach the LLM server. Check the base URL and network connectivity."
+        )
+    except (ValueError, KeyError, TypeError):
+        raise HTTPException(
+            status_code=502,
+            detail="LLM server returned an unexpected response format."
+        )
+
+    return LocalLLMModelsResponse(models=model_ids)
 
 
 @router.post("/test-connection", response_model=schemas.AIConnectionTestResponse)
@@ -936,32 +987,24 @@ async def detect_items(
             # Reset file position for Gemini fallback
             await file.seek(0)
     
-    # Check if Gemini API is configured (env or database)
-    gemini_api_key = get_effective_gemini_api_key(db)
-    if not gemini_api_key:
+    # Check if an AI provider is configured (local LLM or Gemini, env or database)
+    from .. import llm_service
+    if not llm_service.is_configured(db):
         raise HTTPException(
             status_code=503,
-            detail="AI detection is not configured. Please set GEMINI_API_KEY in environment or configure it in the admin panel."
+            detail="AI detection is not configured. Set GEMINI_API_KEY or configure a local LLM provider in the admin panel."
         )
-    
+
     # Validate file type
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_IMAGE_TYPES)}"
         )
-    
-    try:
-        # Import Gemini SDK
-        import google.genai as genai
-        from google.genai import types
 
+    try:
         # Read the image
         image_data = await read_limited(file, MAX_IMAGE_BYTES)
-
-        # Create the client and model with effective model selection
-        gemini_model = get_effective_gemini_model(db)
-        client = genai.Client(api_key=gemini_api_key)
 
         # Construct the prompt
         prompt = """Analyze this image and identify all visible household items, furniture, electronics,
@@ -985,14 +1028,12 @@ Return ONLY a JSON array of objects with these fields. Example format:
 Focus on items that would be important for home insurance or inventory purposes.
 Return an empty array [] if no identifiable items are found."""
 
-        # Create the image part for the API
-        image_part = types.Part.from_bytes(data=image_data, mime_type=file.content_type)
-
-        # Generate the response
-        response = client.models.generate_content(model=gemini_model, contents=[prompt, image_part])
+        # Generate the response via the active provider (local LLM or Gemini)
+        response_text = await llm_service.generate(
+            db, prompt, image_data=image_data, mime_type=file.content_type
+        )
 
         # Parse the response
-        response_text = response.text
         items = parse_gemini_response(response_text)
 
         return DetectionResult(
@@ -1075,35 +1116,24 @@ async def parse_data_tag(
             # Reset file position for Gemini fallback
             await file.seek(0)
     
-    # Check if Gemini API is configured (env or database)
-    gemini_api_key = get_effective_gemini_api_key(db)
-    if not gemini_api_key:
+    # Check if an AI provider is configured (local LLM or Gemini, env or database)
+    from .. import llm_service
+    if not llm_service.is_configured(db):
         raise HTTPException(
             status_code=503,
-            detail="AI detection is not configured. Please set GEMINI_API_KEY in environment or configure it in the admin panel."
+            detail="AI detection is not configured. Set GEMINI_API_KEY or configure a local LLM provider in the admin panel."
         )
-    
+
     # Validate file type
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_IMAGE_TYPES)}"
         )
-    
+
     try:
-        # Import Gemini SDK
-        import google.genai as genai
-        from google.genai import types
-
-        # Get the effective Gemini model
-        from ..settings_service import get_effective_gemini_model
-
         # Read the image
         image_data = await read_limited(file, MAX_IMAGE_BYTES)
-
-        # Create the client and model with effective model selection
-        gemini_model = get_effective_gemini_model(db)
-        client = genai.Client(api_key=gemini_api_key)
 
         # Construct the prompt for data tag parsing
         prompt = """Analyze this image of a product data tag, label, or identification plate.
@@ -1140,14 +1170,12 @@ Example format:
 If no data tag information can be read from the image, return:
 {"manufacturer": null, "brand": null, "model_number": null, "serial_number": null, "production_date": null, "estimated_value": null}"""
 
-        # Create the image part for the API
-        image_part = types.Part.from_bytes(data=image_data, mime_type=file.content_type)
-
-        # Generate the response
-        response = client.models.generate_content(model=gemini_model, contents=[prompt, image_part])
+        # Generate the response via the active provider (local LLM or Gemini)
+        response_text = await llm_service.generate(
+            db, prompt, image_data=image_data, mime_type=file.content_type
+        )
 
         # Parse the response
-        response_text = response.text
         result = parse_data_tag_response(response_text)
 
         # If parsing failed, include raw response
@@ -1246,11 +1274,11 @@ async def parse_paint_label(
     Extracts brand, color name/code, finish, tint formula, vendor, date mixed,
     and other paint-specific information from the label.
     """
-    gemini_api_key = get_effective_gemini_api_key(db)
-    if not gemini_api_key:
+    from .. import llm_service
+    if not llm_service.is_configured(db):
         raise HTTPException(
             status_code=503,
-            detail="AI detection is not configured. Please set GEMINI_API_KEY in environment or configure it in the admin panel."
+            detail="AI detection is not configured. Set GEMINI_API_KEY or configure a local LLM provider in the admin panel."
         )
 
     if file.content_type not in ALLOWED_IMAGE_TYPES:
@@ -1260,13 +1288,7 @@ async def parse_paint_label(
         )
 
     try:
-        import google.genai as genai
-        from google.genai import types
-        from ..settings_service import get_effective_gemini_model
-
         image_data = await read_limited(file, MAX_IMAGE_BYTES)
-        gemini_model = get_effective_gemini_model(db)
-        client = genai.Client(api_key=gemini_api_key)
 
         prompt = """Analyze this photo of a paint can label or lid.
 
@@ -1302,12 +1324,13 @@ Example:
 
 If the image does not appear to be a paint can label, return all null values."""
 
-        image_part = types.Part.from_bytes(data=image_data, mime_type=file.content_type)
-        response = client.models.generate_content(model=gemini_model, contents=[prompt, image_part])
-        result = parse_paint_label_response(response.text)
+        response_text = await llm_service.generate(
+            db, prompt, image_data=image_data, mime_type=file.content_type
+        )
+        result = parse_paint_label_response(response_text)
 
         if not any([result.brand, result.color_name, result.color_code, result.finish]):
-            result.raw_response = sanitize_raw_response(response.text)
+            result.raw_response = sanitize_raw_response(response_text)
 
         return result
 

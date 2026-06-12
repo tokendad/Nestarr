@@ -1865,6 +1865,13 @@ export interface ConfigStatusResponse {
   gemini_from_env: boolean;
   gemini_model_from_env: boolean;
   google_from_env: boolean;
+  // Local / OpenAI-compatible LLM provider (issue #560)
+  llm_provider_type?: string | null;
+  llm_base_url?: string | null;
+  llm_api_key_masked?: string | null;
+  llm_model?: string | null;
+  llm_configured?: boolean;
+  llm_from_env?: boolean;
 }
 
 export interface ApiKeysUpdate {
@@ -1872,6 +1879,10 @@ export interface ApiKeysUpdate {
   gemini_model?: string | null;
   google_client_id?: string | null;
   google_client_secret?: string | null;
+  llm_provider_type?: string | null;
+  llm_base_url?: string | null;
+  llm_api_key?: string | null;
+  llm_model?: string | null;
 }
 
 export interface ApiKeysUpdateResponse {
@@ -1912,6 +1923,20 @@ export interface GeminiModelInfo {
 export interface GeminiModelsApiResponse {
   models: GeminiModelInfo[];
   source: string;
+}
+
+export interface LocalLLMModelsResponse {
+  models: string[];
+}
+
+export async function fetchLocalLLMModels(): Promise<LocalLLMModelsResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/ai/llm-models`, {
+    headers: {
+      "Accept": "application/json",
+      ...authHeaders(),
+    },
+  });
+  return handleResponse<LocalLLMModelsResponse>(res);
 }
 
 export async function fetchGeminiModels(): Promise<GeminiModelsApiResponse> {

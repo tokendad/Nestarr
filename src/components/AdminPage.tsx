@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import NetworkDiscoveryWizard from "./onboarding/NetworkDiscoveryWizard";
+import LocalLLMSettings from "./LocalLLMSettings";
 import {
   fetchUsers,
   updateUser,
@@ -3352,6 +3353,9 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
                 </button>
               </div>
             )}
+
+            {/* Local / OpenAI-compatible LLM provider (issue #560) */}
+            <LocalLLMSettings />
 
             {/* Help Text */}
             <div style={{

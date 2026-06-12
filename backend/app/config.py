@@ -49,6 +49,15 @@ class Settings(BaseSettings):
     # Free tier allows 15 requests per minute, so 4-5 seconds delay is recommended
     GEMINI_REQUEST_DELAY: float = 4.0
 
+    # Local / OpenAI-compatible LLM provider settings (Ollama, vLLM, LM Studio, etc.)
+    # Env vars take priority over database settings, same as Gemini above.
+    LLM_PROVIDER_TYPE: Optional[str] = None  # 'gemini' (default) | 'openai_compat'
+    LLM_BASE_URL: Optional[str] = None  # e.g. http://ollama:11434/v1
+    LLM_API_KEY: Optional[str] = None  # optional; many local servers need none
+    LLM_MODEL: Optional[str] = None  # e.g. llama3.2-vision
+    # Local models on modest hardware can be slow; generous but bounded
+    LLM_REQUEST_TIMEOUT: float = 120.0
+
     # Google OAuth settings
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None

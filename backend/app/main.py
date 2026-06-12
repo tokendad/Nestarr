@@ -43,8 +43,9 @@ def run_migrations():
                        "gdrive_refresh_token", "gdrive_last_backup", "upc_databases", "ai_providers", "document_type", "color", 
                        "supports_image_processing", "gemini_model", "must_change_password", "niimbot_printer_config",
                        "additional_info", "thumbnail_path", "location_category", "custom_location_categories",
-                       "paint_info", "is_living", "birthdate", "contact_info", "relationship_type", 
-                       "is_current_user", "associated_user_id"}
+                       "paint_info", "is_living", "birthdate", "contact_info", "relationship_type",
+                       "is_current_user", "associated_user_id",
+                       "llm_provider_type", "llm_base_url", "llm_api_key", "llm_model"}
     ALLOWED_TYPES = {"VARCHAR(255)", "VARCHAR(20)", "VARCHAR(64)", "VARCHAR(7)", "VARCHAR(100)", "BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT TRUE", "INTEGER DEFAULT 7", "TIMESTAMP", "TEXT", "JSON", "VARCHAR(1024)", "VARCHAR(50)", "DATE", "UUID"}
     
     # Define migrations: (table_name, column_name, column_definition)
@@ -99,6 +100,11 @@ def run_migrations():
         ("items", "relationship_type", "VARCHAR(100)"),
         ("items", "is_current_user", "BOOLEAN DEFAULT FALSE"),
         ("items", "associated_user_id", "UUID"),
+        # SystemSettings model: local/OpenAI-compatible LLM provider (issue #560)
+        ("system_settings", "llm_provider_type", "VARCHAR(20)"),
+        ("system_settings", "llm_base_url", "VARCHAR(1024)"),
+        ("system_settings", "llm_api_key", "VARCHAR(255)"),
+        ("system_settings", "llm_model", "VARCHAR(100)"),
     ]
     
     with engine.begin() as conn:

@@ -180,6 +180,10 @@ class SystemSettingsBase(BaseModel):
     google_client_id: Optional[str] = None
     google_client_secret: Optional[str] = None
     custom_location_categories: Optional[List[str]] = None
+    llm_provider_type: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_model: Optional[str] = None
 
 
 class SystemSettingsUpdate(SystemSettingsBase):

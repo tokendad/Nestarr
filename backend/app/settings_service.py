@@ -110,3 +110,52 @@ def is_gemini_model_from_env() -> bool:
     import os
     # Check if the env var is explicitly set (not just using the default from config)
     return 'GEMINI_MODEL' in os.environ
+
+
+def get_effective_llm_config(db: Session) -> dict:
+    """
+    Get the effective local/OpenAI-compatible LLM provider configuration.
+
+    Priority for each field:
+    1. Environment variable (LLM_PROVIDER_TYPE, LLM_BASE_URL, LLM_API_KEY, LLM_MODEL)
+    2. Database SystemSettings (llm_provider_type, llm_base_url, llm_api_key, llm_model)
+
+    Returns:
+        Dict with keys: provider_type ('gemini' when unset), base_url, api_key, model.
+    """
+    db_settings = db.query(models.SystemSettings).first()
+
+    def effective(env_value: Optional[str], db_value: Optional[str]) -> Optional[str]:
+        if env_value and env_value.strip():
+            return env_value.strip()
+        if db_value and db_value.strip():
+            return db_value.strip()
+        return None
+
+    return {
+        "provider_type": effective(
+            settings.LLM_PROVIDER_TYPE,
+            db_settings.llm_provider_type if db_settings else None,
+        ) or "gemini",
+        "base_url": effective(
+            settings.LLM_BASE_URL,
+            db_settings.llm_base_url if db_settings else None,
+        ),
+        "api_key": effective(
+            settings.LLM_API_KEY,
+            db_settings.llm_api_key if db_settings else None,
+        ),
+        "model": effective(
+            settings.LLM_MODEL,
+            db_settings.llm_model if db_settings else None,
+        ),
+    }
+
+
+def is_llm_from_env() -> bool:
+    """Check if any local LLM provider setting is set via environment variables."""
+    return bool(
+        (settings.LLM_PROVIDER_TYPE and settings.LLM_PROVIDER_TYPE.strip())
+        or (settings.LLM_BASE_URL and settings.LLM_BASE_URL.strip())
+        or (settings.LLM_MODEL and settings.LLM_MODEL.strip())
+    )

@@ -27,6 +27,13 @@ class ConfigStatusResponse(BaseModel):
     gemini_from_env: bool = False
     gemini_model_from_env: bool = False  # Indicate if model is from env (read-only)
     google_from_env: bool = False
+    # Local / OpenAI-compatible LLM provider (issue #560)
+    llm_provider_type: Optional[str] = None  # 'gemini' | 'openai_compat'
+    llm_base_url: Optional[str] = None
+    llm_api_key_masked: Optional[str] = None
+    llm_model: Optional[str] = None
+    llm_configured: bool = False  # True when local provider is fully configured
+    llm_from_env: bool = False
 
 
 class ApiKeysUpdate(BaseModel):
@@ -35,8 +42,13 @@ class ApiKeysUpdate(BaseModel):
     gemini_model: Optional[str] = None  # Add Gemini model selection
     google_client_id: Optional[str] = None
     google_client_secret: Optional[str] = None
-    
-    @field_validator('gemini_api_key', 'google_client_id', 'google_client_secret', mode='before')
+    # Local / OpenAI-compatible LLM provider (issue #560)
+    llm_provider_type: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_model: Optional[str] = None
+
+    @field_validator('gemini_api_key', 'google_client_id', 'google_client_secret', 'llm_api_key', mode='before')
     @classmethod
     def sanitize_api_key(cls, v):
         """Sanitize API key input to prevent injection attacks."""
@@ -290,7 +302,16 @@ async def get_config_status(
     
     # Get the effective Gemini model
     gemini_model = get_effective_gemini_model(db) if gemini_configured else None
-    
+
+    # Local / OpenAI-compatible LLM provider status
+    from ..settings_service import get_effective_llm_config, is_llm_from_env
+    llm_cfg = get_effective_llm_config(db)
+    llm_configured = bool(
+        llm_cfg["provider_type"] == "openai_compat"
+        and llm_cfg["base_url"]
+        and llm_cfg["model"]
+    )
+
     return ConfigStatusResponse(
         google_oauth_configured=google_oauth_configured,
         google_client_id=google_client_id if google_oauth_configured else None,
@@ -301,7 +322,13 @@ async def get_config_status(
         available_gemini_models=AVAILABLE_GEMINI_MODELS,
         gemini_from_env=gemini_from_env,
         gemini_model_from_env=gemini_model_from_env,
-        google_from_env=google_from_env
+        google_from_env=google_from_env,
+        llm_provider_type=llm_cfg["provider_type"],
+        llm_base_url=llm_cfg["base_url"],
+        llm_api_key_masked=mask_secret(llm_cfg["api_key"]),
+        llm_model=llm_cfg["model"],
+        llm_configured=llm_configured,
+        llm_from_env=is_llm_from_env()
     )
 
 
@@ -357,10 +384,36 @@ async def update_api_keys(
     
     if (api_keys.google_client_id is not None or api_keys.google_client_secret is not None) and google_from_env:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Cannot update Google OAuth settings - they are set via environment variables"
         )
-    
+
+    # Local LLM provider validation
+    from ..settings_service import is_llm_from_env
+    from ..llm_service import validate_llm_base_url
+    llm_fields_present = any(
+        f is not None for f in (
+            api_keys.llm_provider_type, api_keys.llm_base_url,
+            api_keys.llm_api_key, api_keys.llm_model,
+        )
+    )
+    if llm_fields_present and is_llm_from_env():
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot update local LLM settings - they are set via environment variables"
+        )
+    if api_keys.llm_provider_type is not None and api_keys.llm_provider_type.strip() not in ("", "gemini", "openai_compat"):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid LLM provider type. Must be 'gemini' or 'openai_compat'."
+        )
+    if api_keys.llm_base_url is not None and api_keys.llm_base_url.strip():
+        url_error = validate_llm_base_url(api_keys.llm_base_url.strip())
+        if url_error:
+            raise HTTPException(status_code=400, detail=f"Invalid LLM base URL: {url_error}")
+    if api_keys.llm_model is not None and len(api_keys.llm_model.strip()) > 100:
+        raise HTTPException(status_code=400, detail="LLM model name is too long.")
+
     # Get or create system settings
     db_settings = db.query(models.SystemSettings).first()
     if not db_settings:
@@ -380,7 +433,19 @@ async def update_api_keys(
     
     if api_keys.google_client_secret is not None:
         db_settings.google_client_secret = api_keys.google_client_secret if api_keys.google_client_secret else None
-    
+
+    if api_keys.llm_provider_type is not None:
+        db_settings.llm_provider_type = api_keys.llm_provider_type.strip() or None
+
+    if api_keys.llm_base_url is not None:
+        db_settings.llm_base_url = api_keys.llm_base_url.strip() or None
+
+    if api_keys.llm_api_key is not None:
+        db_settings.llm_api_key = api_keys.llm_api_key or None
+
+    if api_keys.llm_model is not None:
+        db_settings.llm_model = api_keys.llm_model.strip() or None
+
     db.commit()
     
     # Get current configuration status

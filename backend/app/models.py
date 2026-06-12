@@ -496,6 +496,12 @@ class SystemSettings(Base):
     gemini_api_key = Column(String(255), nullable=True)
     # Gemini model selection (only used if GEMINI_MODEL env var is not set)
     gemini_model = Column(String(100), nullable=True)
+
+    # Local / OpenAI-compatible LLM provider (only used if LLM_* env vars are not set)
+    llm_provider_type = Column(String(20), nullable=True)  # 'gemini' (default when NULL) | 'openai_compat'
+    llm_base_url = Column(String(1024), nullable=True)  # e.g. http://ollama:11434/v1
+    llm_api_key = Column(String(255), nullable=True)  # optional
+    llm_model = Column(String(100), nullable=True)  # e.g. llama3.2-vision
     
     # Google OAuth settings (only used if GOOGLE_CLIENT_ID/SECRET env vars are not set)
     google_client_id = Column(String(255), nullable=True)
