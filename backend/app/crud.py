@@ -127,7 +127,61 @@ def delete_maintenance_task(db: Session, task_id) -> bool:
     db_task = get_maintenance_task(db, task_id)
     if not db_task:
         return False
-    
+
     db.delete(db_task)
+    db.commit()
+    return True
+
+
+# --- Maintenance Records (Repair Log) ---
+
+
+def create_repair_record(
+    db: Session, record_in: schemas.MaintenanceRecordCreate
+) -> models.MaintenanceRecord:
+    db_record = models.MaintenanceRecord(**record_in.model_dump())
+    db.add(db_record)
+    db.commit()
+    db.refresh(db_record)
+    return db_record
+
+
+def get_repair_records_for_item(
+    db: Session, item_id
+) -> List[models.MaintenanceRecord]:
+    return (
+        db.query(models.MaintenanceRecord)
+        .filter(models.MaintenanceRecord.item_id == item_id)
+        .order_by(models.MaintenanceRecord.date.desc())
+        .all()
+    )
+
+
+def get_repair_record(db: Session, record_id) -> Optional[models.MaintenanceRecord]:
+    return db.query(models.MaintenanceRecord).filter(models.MaintenanceRecord.id == record_id).first()
+
+
+def update_repair_record(
+    db: Session, record_id, record_update: schemas.MaintenanceRecordUpdate
+) -> Optional[models.MaintenanceRecord]:
+    db_record = get_repair_record(db, record_id)
+    if not db_record:
+        return None
+
+    update_data = record_update.model_dump(exclude_unset=True, exclude={'id', 'created_at', 'updated_at'})
+    for field, value in update_data.items():
+        setattr(db_record, field, value)
+
+    db.commit()
+    db.refresh(db_record)
+    return db_record
+
+
+def delete_repair_record(db: Session, record_id) -> bool:
+    db_record = get_repair_record(db, record_id)
+    if not db_record:
+        return False
+
+    db.delete(db_record)
     db.commit()
     return True

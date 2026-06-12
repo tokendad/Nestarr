@@ -19,7 +19,7 @@ setup_logging()
 from . import models
 from .database import Base, engine, SessionLocal
 from .seed_data import seed_database
-from .routers import items, locations, auth, status, photos, users, tags, encircle, ai, gdrive, logs, documents, videos, maintenance, plugins, location_photos, csv_import, media, oidc, printer, printer_profiles, onboarding, network_discovery
+from .routers import items, locations, auth, status, photos, users, tags, encircle, ai, gdrive, logs, documents, videos, maintenance, repair_log, plugins, location_photos, csv_import, media, oidc, printer, printer_profiles, onboarding, network_discovery
 from .routers import settings as settings_router
 from .routers import agents as agents_router
 from .routers import collections as collections_router
@@ -434,6 +434,7 @@ app.include_router(logs.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(videos.router, prefix="/api")
 app.include_router(maintenance.router)
+app.include_router(repair_log.router)
 app.include_router(plugins.router, prefix="/api")
 app.include_router(location_photos.router, prefix="/api")
 app.include_router(csv_import.router, prefix="/api")

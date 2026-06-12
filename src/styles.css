@@ -3800,6 +3800,76 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   color: var(--text-color);
 }
 
+/* Repair History (Maintenance Records) */
+.repair-history {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.repair-history.loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+.repair-total {
+  margin-left: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.repair-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.repair-list .empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+
+.repair-list .empty-state p {
+  margin: 0.5rem 0;
+}
+
+.repair-record {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  transition: all 0.2s;
+}
+
+.repair-record:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.repair-record .task-header {
+  margin-bottom: 0;
+}
+
+.repair-record-top {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  margin-bottom: 0.25rem;
+}
+
+.repair-date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.repair-cost {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
 /* Responsive adjustments */
 /* Removed duplicate - merged into main @media (max-width: 768px) above */
 

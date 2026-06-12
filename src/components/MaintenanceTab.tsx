@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
-import type { MaintenanceTask, MaintenanceTaskCreate } from "../lib/api";
+import type { MaintenanceTask, MaintenanceTaskCreate, MaintenanceRecord, MaintenanceRecordCreate } from "../lib/api";
 import {
   fetchMaintenanceTasksForItem,
   createMaintenanceTask,
   updateMaintenanceTask,
   deleteMaintenanceTask,
+  fetchRepairLog,
+  createRepairRecord,
+  updateRepairRecord,
+  deleteRepairRecord,
 } from "../lib/api";
 import { formatDate } from "../lib/utils";
 
@@ -385,6 +389,254 @@ const MaintenanceTab: React.FC<MaintenanceTabProps> = ({ itemId }) => {
                   <span className="detail-value">{formatDate(task.last_completed)}</span>
                 </div>
               )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <RepairHistorySection itemId={itemId} />
+    </div>
+  );
+};
+
+const formatCost = (cost: number | string | null | undefined): string | null => {
+  if (cost === null || cost === undefined || cost === '') return null;
+  const num = typeof cost === 'string' ? parseFloat(cost) : cost;
+  if (isNaN(num)) return null;
+  return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+};
+
+interface RepairHistorySectionProps {
+  itemId: string;
+}
+
+const RepairHistorySection: React.FC<RepairHistorySectionProps> = ({ itemId }) => {
+  const [records, setRecords] = useState<MaintenanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  // Form state
+  const [formDate, setFormDate] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formParts, setFormParts] = useState('');
+  const [formCost, setFormCost] = useState('');
+
+  useEffect(() => {
+    loadRecords();
+  }, [itemId]);
+
+  const loadRecords = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchRepairLog(itemId);
+      setRecords(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load repair history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormDate('');
+    setFormDescription('');
+    setFormParts('');
+    setFormCost('');
+    setEditingRecordId(null);
+  };
+
+  const handleAdd = () => {
+    resetForm();
+    setFormDate(new Date().toISOString().split('T')[0]);
+    setShowForm(true);
+  };
+
+  const handleEdit = (record: MaintenanceRecord) => {
+    setEditingRecordId(record.id);
+    setFormDate(record.date);
+    setFormDescription(record.description);
+    setFormParts(record.parts || '');
+    setFormCost(record.cost !== null && record.cost !== undefined ? String(record.cost) : '');
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!formDescription.trim()) {
+      alert('Please describe what was done');
+      return;
+    }
+    if (!formDate) {
+      alert('Please enter the repair date');
+      return;
+    }
+
+    const costValue = formCost.trim() === '' ? null : parseFloat(formCost);
+    if (costValue !== null && (isNaN(costValue) || costValue < 0)) {
+      alert('Please enter a valid cost');
+      return;
+    }
+
+    const recordData: MaintenanceRecordCreate = {
+      item_id: itemId,
+      date: formDate,
+      description: formDescription.trim(),
+      parts: formParts.trim() || null,
+      cost: costValue,
+    };
+
+    try {
+      if (editingRecordId) {
+        await updateRepairRecord(editingRecordId, recordData);
+      } else {
+        await createRepairRecord(recordData);
+      }
+      await loadRecords();
+      resetForm();
+      setShowForm(false);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save repair record');
+    }
+  };
+
+  const handleDelete = async (recordId: string) => {
+    if (!confirm('Are you sure you want to delete this repair record?')) {
+      return;
+    }
+
+    try {
+      await deleteRepairRecord(recordId);
+      await loadRecords();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete repair record');
+    }
+  };
+
+  const totalCost = records.reduce((sum, r) => {
+    const num = typeof r.cost === 'string' ? parseFloat(r.cost) : r.cost;
+    return sum + (num && !isNaN(num) ? num : 0);
+  }, 0);
+
+  if (loading) {
+    return <div className="repair-history loading">Loading repair history...</div>;
+  }
+
+  return (
+    <div className="repair-history">
+      {error && <div className="error-banner">{error}</div>}
+
+      <div className="maintenance-header">
+        <h3>
+          Repair History
+          {totalCost > 0 && (
+            <span className="repair-total"> Total: {formatCost(totalCost)}</span>
+          )}
+        </h3>
+        {!showForm && (
+          <button className="btn-primary" onClick={handleAdd}>
+            + Log Repair
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="maintenance-form">
+          <h4>{editingRecordId ? 'Edit Repair Record' : 'Log a Repair'}</h4>
+          <div className="form-grid">
+            <div className="form-field">
+              <label>Date *</label>
+              <input
+                type="date"
+                value={formDate}
+                onChange={(e) => setFormDate(e.target.value)}
+              />
+            </div>
+
+            <div className="form-field">
+              <label>What was done *</label>
+              <input
+                type="text"
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="e.g., Oil change, brake pad replacement"
+              />
+            </div>
+
+            <div className="form-field">
+              <label>Parts Replaced</label>
+              <textarea
+                value={formParts}
+                onChange={(e) => setFormParts(e.target.value)}
+                placeholder="e.g., Fram PH3614 oil filter, Mobil 1 5W-30 5qt"
+                rows={2}
+              />
+            </div>
+
+            <div className="form-field">
+              <label>Cost ($)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formCost}
+                onChange={(e) => setFormCost(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button className="btn-outline" onClick={() => { resetForm(); setShowForm(false); }}>
+              Cancel
+            </button>
+            <button className="btn-primary" onClick={handleSave}>
+              {editingRecordId ? 'Update' : 'Save'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="repair-list">
+        {records.length === 0 && !showForm && (
+          <div className="empty-state">
+            <p>No repairs logged for this item.</p>
+            <p>Click "Log Repair" to record work that was done.</p>
+          </div>
+        )}
+
+        {records.map((record) => (
+          <div key={record.id} className="repair-record">
+            <div className="task-header">
+              <div className="task-info">
+                <div className="repair-record-top">
+                  <span className="repair-date">{formatDate(record.date)}</span>
+                  {formatCost(record.cost) && (
+                    <span className="repair-cost">{formatCost(record.cost)}</span>
+                  )}
+                </div>
+                <h4>{record.description}</h4>
+                {record.parts && (
+                  <p className="task-description">Parts: {record.parts}</p>
+                )}
+              </div>
+              <div className="task-actions">
+                <button
+                  className="btn-icon"
+                  onClick={() => handleEdit(record)}
+                  title="Edit record"
+                >
+                  ✎
+                </button>
+                <button
+                  className="btn-icon btn-danger"
+                  onClick={() => handleDelete(record.id)}
+                  title="Delete record"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
         ))}

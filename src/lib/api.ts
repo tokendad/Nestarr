@@ -80,6 +80,27 @@ export interface MaintenanceTaskCreate {
   last_completed?: string | null;
 }
 
+export interface MaintenanceRecord {
+  id: string;
+  item_id: string;
+  task_id?: string | null;
+  date: string;
+  description: string;
+  parts?: string | null;
+  cost?: number | string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaintenanceRecordCreate {
+  item_id: string;
+  task_id?: string | null;
+  date: string;
+  description: string;
+  parts?: string | null;
+  cost?: number | null;
+}
+
 export interface Item {
   id: number | string;
   name: string;
@@ -1951,6 +1972,64 @@ export async function updateMaintenanceTask(taskId: string, task: MaintenanceTas
 
 export async function deleteMaintenanceTask(taskId: string): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/api/maintenance/${taskId}`, {
+    method: "DELETE",
+    headers: {
+      ...authHeaders(),
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    let message = text;
+    try {
+      const data = JSON.parse(text);
+      message = (data.detail as string) || JSON.stringify(data);
+    } catch {
+      // ignore
+    }
+    throw new Error(message || `HTTP ${res.status}`);
+  }
+}
+
+// --- Repair Log (Maintenance Record) APIs ---
+
+export async function fetchRepairLog(itemId: string): Promise<MaintenanceRecord[]> {
+  const res = await fetch(`${API_BASE_URL}/api/repair-log/item/${itemId}`, {
+    headers: {
+      "Accept": "application/json",
+      ...authHeaders(),
+    },
+  });
+  return handleResponse<MaintenanceRecord[]>(res);
+}
+
+export async function createRepairRecord(record: MaintenanceRecordCreate): Promise<MaintenanceRecord> {
+  const res = await fetch(`${API_BASE_URL}/api/repair-log/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(record),
+  });
+  return handleResponse<MaintenanceRecord>(res);
+}
+
+export async function updateRepairRecord(recordId: string, record: Partial<MaintenanceRecordCreate>): Promise<MaintenanceRecord> {
+  const res = await fetch(`${API_BASE_URL}/api/repair-log/${recordId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(record),
+  });
+  return handleResponse<MaintenanceRecord>(res);
+}
+
+export async function deleteRepairRecord(recordId: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/repair-log/${recordId}`, {
     method: "DELETE",
     headers: {
       ...authHeaders(),

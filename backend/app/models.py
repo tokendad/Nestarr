@@ -329,6 +329,7 @@ class Item(Base):
     photos = relationship("Photo", back_populates="item", foreign_keys="[Photo.item_id]", cascade="all, delete-orphan")
     documents = relationship("Document", back_populates="item", cascade="all, delete-orphan")
     maintenance_tasks = relationship("MaintenanceTask", back_populates="item", cascade="all, delete-orphan")
+    maintenance_records = relationship("MaintenanceRecord", back_populates="item", cascade="all, delete-orphan")
     tags = relationship("Tag", secondary=item_tags, back_populates="items")
     associated_user = relationship("User", foreign_keys=[associated_user_id], back_populates="living_items")
 
@@ -444,6 +445,27 @@ class MaintenanceTask(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     item = relationship("Item", back_populates="maintenance_tasks")
+
+
+class MaintenanceRecord(Base):
+    """A repair/maintenance event that already happened (history), as opposed to
+    MaintenanceTask which is a schedule of what should happen."""
+    __tablename__ = "maintenance_records"
+
+    id = Column(UUID(), primary_key=True, default=uuid.uuid4)
+    item_id = Column(UUID(), ForeignKey("items.id"), nullable=False)
+    # SET NULL so repair history survives deletion of the scheduled task
+    task_id = Column(UUID(), ForeignKey("maintenance_tasks.id", ondelete="SET NULL"), nullable=True)
+
+    date = Column(Date, nullable=False)
+    description = Column(Text, nullable=False)
+    parts = Column(Text, nullable=True)
+    cost = Column(Numeric(12, 2), nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    item = relationship("Item", back_populates="maintenance_records")
 
 
 class Tag(Base):

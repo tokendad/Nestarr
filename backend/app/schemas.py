@@ -600,6 +600,38 @@ class MaintenanceTask(MaintenanceTaskBase):
         from_attributes = True
 
 
+# --- Maintenance Record (Repair Log) Schemas ---
+
+class MaintenanceRecordBase(BaseModel):
+    item_id: UUID
+    task_id: Optional[UUID] = None
+    date: date
+    description: str
+    parts: Optional[str] = None
+    cost: Optional[Decimal] = None
+
+
+class MaintenanceRecordCreate(MaintenanceRecordBase):
+    pass
+
+
+class MaintenanceRecordUpdate(BaseModel):
+    task_id: Optional[UUID] = None
+    date: Optional[date] = None
+    description: Optional[str] = None
+    parts: Optional[str] = None
+    cost: Optional[Decimal] = None
+
+
+class MaintenanceRecord(MaintenanceRecordBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 # --- Bulk Operations Schemas ---
 
 class BulkDeleteRequest(BaseModel):
