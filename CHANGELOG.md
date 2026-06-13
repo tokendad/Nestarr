@@ -1,4 +1,9 @@
 # Changelog
+n## [7.2.0] - 2026-06-13
+### Added
+- Automated release 7.2.0
+- Tags: New Feature
+
 n## [7.1.2] - 2026-05-31
 ### Fixed
 - Automated release 7.1.2
