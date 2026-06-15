@@ -35,8 +35,11 @@ const STORAGE_KEY_MIGRATIONS = [
   [LEGACY_STORAGE_KEYS.PRINT_PREFERENCES, STORAGE_KEYS.PRINT_PREFERENCES],
 ] as const;
 
+const MIGRATION_DONE_KEY = "Nestarr_migrated";
+
 export function migrateLegacyBrowserStorage(): void {
   if (typeof window === "undefined" || !window.localStorage) return;
+  if (localStorage.getItem(MIGRATION_DONE_KEY) !== null) return;
 
   for (const [legacyKey, newKey] of STORAGE_KEY_MIGRATIONS) {
     try {
@@ -50,6 +53,12 @@ export function migrateLegacyBrowserStorage(): void {
     } catch (error) {
       console.warn(`Failed to migrate browser storage key ${legacyKey}:`, error);
     }
+  }
+
+  try {
+    localStorage.setItem(MIGRATION_DONE_KEY, "1");
+  } catch {
+    // Non-fatal — migration will re-run on next load but is idempotent
   }
 }
 

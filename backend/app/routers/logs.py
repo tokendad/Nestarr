@@ -144,13 +144,13 @@ def format_file_size(size_bytes: int) -> str:
 
 def get_log_type(filename: str) -> str:
     """Determine log type from filename."""
-    if filename == "nestarr.log":
+    if filename in (CURRENT_LOG_FILE.name, "nesventory.log"):
         return "current"
     elif ".debug" in filename:
         return "debug"
     elif ".trace" in filename:
         return "trace"
-    elif filename.startswith("nestarr.log."):
+    elif filename.startswith("nestarr.log.") or filename.startswith("nesventory.log."):
         return "rotated"
     return "unknown"
 
@@ -160,10 +160,12 @@ def get_log_files() -> list[dict]:
     ensure_log_dir_exists()
     log_files = []
     
-    # Pattern for log files: nestarr.log*
+    # Include both new and legacy log file naming so pre-upgrade rotated files remain visible
     patterns = [
         "nestarr.log",
         "nestarr.log.*",
+        "nesventory.log",
+        "nesventory.log.*",
     ]
     
     for pattern in patterns:
@@ -198,12 +200,13 @@ def get_log_stats() -> LogStats:
     except OSError:
         pass
 
-    # Count rotated files and find oldest
+    # Count rotated files and find oldest — include legacy naming for pre-upgrade files
     rotated_files = []
     try:
-        for filepath in LOG_DIR.glob("nestarr.log.*"):
-            if filepath.is_file() and filepath.name != "log_settings.json":
-                rotated_files.append((filepath.name, filepath.stat().st_mtime))
+        for pattern in ("nestarr.log.*", "nesventory.log.*"):
+            for filepath in LOG_DIR.glob(pattern):
+                if filepath.is_file() and filepath.name != "log_settings.json":
+                    rotated_files.append((filepath.name, filepath.stat().st_mtime))
     except OSError:
         pass
 
@@ -473,7 +476,7 @@ async def get_issue_report_data(
     
     # Get error logs (last 50 lines from current log file)
     error_logs = ""
-    current_log = LOG_DIR / "nestarr.log"
+    current_log = CURRENT_LOG_FILE
     if current_log.exists():
         try:
             with open(current_log, 'r', encoding='utf-8', errors='replace') as f:

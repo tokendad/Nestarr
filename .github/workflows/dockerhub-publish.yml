@@ -12,6 +12,10 @@ on:
     # the schedule would need to be adjusted twice yearly.
     - cron: '0 7 * * *'
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Automated Release"]
+    types: [completed]
+    branches: [main]
 
 env:
   IMAGE_NAME: neuman1812/nestarr
@@ -95,3 +99,11 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Update DockerHub repository description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE_NAME }}
+          readme-filepath: ./DOCKERHUB.md

@@ -84,7 +84,13 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(
     () => {
       const stored = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-      return stored ? JSON.parse(stored) : null;
+      if (!stored) return null;
+      try {
+        return JSON.parse(stored) as User;
+      } catch {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+        return null;
+      }
     }
   );
   const [items, setItems] = useState<Item[]>([]);
