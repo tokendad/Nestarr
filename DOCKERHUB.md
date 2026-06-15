@@ -1,6 +1,6 @@
 # Nestarr
 
-![Nestarr Logo](https://raw.githubusercontent.com/tokendad/Nestarr/main/Logo.png)
+![Nestarr Logo](https://github.com/user-attachments/assets/4c605ada-9817-4653-b17a-30ae4c9318a3)
 
 **A modern home inventory management application to track and organize your household items, locations, warranties, and maintenance schedules.**
 
