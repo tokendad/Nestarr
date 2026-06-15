@@ -1,4 +1,9 @@
 # Changelog
+n## [8.0.0] - 2026-06-15
+### Changed
+- Automated release 8.0.0
+- Tags: New Feature,Bug Fix,Breaking Change
+
 n## [7.2.0] - 2026-06-13
 ### Added
 - Automated release 7.2.0

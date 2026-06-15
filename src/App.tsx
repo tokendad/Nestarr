@@ -59,7 +59,7 @@ import type { PhotoUpload, DocumentUpload } from "./lib/types";
 
 type View = "inventory" | "media" | "user-settings" | "calendar" | "admin" | "collections";
 
-const APP_VERSION = "7.2.0";
+const APP_VERSION = "8.0.0";
 
 migrateLegacyBrowserStorage();
 
