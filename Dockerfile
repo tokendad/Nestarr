@@ -1,4 +1,4 @@
-# Dockerfile for NesVentory v2.0
+# Dockerfile for Nestarr v2.0
 # Unified container with frontend, backend, and SQLite database
 
 # Stage 1: Build the frontend
@@ -40,7 +40,7 @@ ENV PUID=${PUID} \
 WORKDIR /app
 
 # Install only essential runtime dependencies
-# gosu is needed for the entrypoint to switch from root to nesventory user
+# gosu is needed for the entrypoint to switch from root to nestarr user
 # curl is needed for healthcheck
 # libcups2-dev is needed for pycups (system printer integration)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -56,26 +56,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nesventory user and add to dialout/plugdev groups for hardware access
-RUN groupadd -o -g ${PGID} nesventory 2>/dev/null || true && \
-    useradd -o -u ${PUID} -g ${PGID} -G dialout,plugdev -s /bin/bash -m nesventory 2>/dev/null || true
+# Create nestarr user and add to dialout/plugdev groups for hardware access
+RUN groupadd -o -g ${PGID} nestarr 2>/dev/null || true && \
+    useradd -o -u ${PUID} -g ${PGID} -G dialout,plugdev -s /bin/bash -m nestarr 2>/dev/null || true
 
 # Install Python backend dependencies
 COPY backend/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org -r /tmp/requirements.txt
 
 # Copy backend application
-COPY --chown=nesventory:nesventory backend/app /app/app
-COPY --chown=nesventory:nesventory VERSION /app/VERSION
+COPY --chown=nestarr:nestarr backend/app /app/app
+COPY --chown=nestarr:nestarr VERSION /app/VERSION
 
 # Copy pre-built frontend from the builder stage
-COPY --from=frontend-builder --chown=nesventory:nesventory /frontend/dist /app/static
+COPY --from=frontend-builder --chown=nestarr:nestarr /frontend/dist /app/static
 
 # Create necessary directories
 # Media files are stored in /app/data/media to persist with the database
 # Logs are stored in /app/data/logs for log persistence across restarts
 RUN mkdir -p /app/data/media/photos /app/data/media/documents /app/data/media/videos /app/data/logs && \
-    chown -R nesventory:nesventory /app/data
+    chown -R nestarr:nestarr /app/data
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

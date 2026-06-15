@@ -15,6 +15,7 @@ import {
 import QRLabelPrint, { PRINT_MODE_OPTIONS, type PrintMode } from "./QRLabelPrint";
 import InsuranceTab from "./InsuranceTab";
 import LivingTab from "./LivingTab";
+import { STORAGE_KEYS } from "../lib/constants";
 
 interface InventoryPageProps {
   items: Item[];
@@ -133,7 +134,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
   const [showImportMenu, setShowImportMenu] = useState(false);
   const [columns, setColumns] = useState<ColumnConfig[]>(
     () => {
-      const saved = localStorage.getItem("NesVentory_itemColumns");
+      const saved = localStorage.getItem(STORAGE_KEYS.ITEM_COLUMNS);
       return saved ? JSON.parse(saved) : DEFAULT_COLUMNS;
     }
   );
@@ -290,7 +291,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
       col.key === key ? { ...col, enabled: !col.enabled } : col
     );
     setColumns(newColumns);
-    localStorage.setItem("NesVentory_itemColumns", JSON.stringify(newColumns));
+    localStorage.setItem(STORAGE_KEYS.ITEM_COLUMNS, JSON.stringify(newColumns));
   };
 
   // Get enabled columns

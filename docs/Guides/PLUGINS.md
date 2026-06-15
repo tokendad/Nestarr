@@ -5,9 +5,9 @@
 > built-in Category Agent or configure a Gemini API key in **Admin → AI Settings**.
 > Existing plugins will continue to function until removal.
 
-> **⚠️ IMPORTANT: Getting 404 errors?** Your plugin Docker image is likely outdated. The `/nesventory/identify/image` endpoint was added in December 2025. Even if you re-cloned the plugin code, you must rebuild or pull the latest Docker image. Jump to [Troubleshooting](#troubleshooting) for the fix.
+> **⚠️ IMPORTANT: Getting 404 errors?** Your plugin Docker image is likely outdated. The `/nestarr/identify/image` endpoint is the current image identification endpoint, and `/nesventory/identify/image` remains a legacy compatibility alias during the rename transition. Even if you re-cloned the plugin code, you must rebuild or pull the latest Docker image. Jump to [Troubleshooting](#troubleshooting) for the fix.
 
-NesVentory supports custom LLM (Large Language Model) plugins that can be used for AI-powered features such as data tag parsing and barcode lookup. This allows you to integrate specialized or pre-trained models that may be better suited for your specific needs.
+Nestarr supports custom LLM (Large Language Model) plugins that can be used for AI-powered features such as data tag parsing and barcode lookup. This allows you to integrate specialized or pre-trained models that may be better suited for your specific needs.
 
 ## Overview
 
@@ -82,7 +82,9 @@ All fields are optional. Return `null` or omit fields that cannot be determined 
 
 ### 2. Detect Items (Image Processing)
 
-**Endpoint**: `POST /nesventory/identify/image`
+**Endpoint**: `POST /nestarr/identify/image`
+
+**Legacy compatibility alias**: `POST /nesventory/identify/image`
 
 **Request**: Multipart form data with a file field
 - Field name: `file`
@@ -202,7 +204,7 @@ Authorization: Bearer YOUR_API_KEY
 See the reference implementation at:
 https://github.com/tokendad/Plugin-Nesventory-LLM
 
-**Important**: For full compatibility with NesVentory's AI scan features (including item detection from images), ensure you are running the **latest version** of the Plugin-Nesventory-LLM. The image identification endpoint (`/nesventory/identify/image`) was added in December 2025. If you experience 404 errors when using AI scan, update your plugin to the latest version:
+**Important**: For full compatibility with Nestarr's AI scan features (including item detection from images), ensure you are running the **latest version** of the Plugin-Nesventory-LLM. The current image identification endpoint is `/nestarr/identify/image`; `/nesventory/identify/image` is retained as a legacy compatibility alias for the rename transition. If you experience 404 errors when using AI scan, update your plugin to the latest version:
 
 ```bash
 # Pull the latest version
@@ -249,11 +251,11 @@ docker-compose up --build -d
 
 **Symptom**: AI scan operations fail with error logs showing:
 ```
-ERROR | Error detecting items with plugin Department 56: Client error '404 Not Found' for url 'http://192.168.1.102:8002/nesventory/identify/image'
+ERROR | Error detecting items with plugin Department 56: Client error '404 Not Found' for url 'http://192.168.1.102:8002/nestarr/identify/image'
 INFO  | All plugins failed, falling back to Gemini AI
 ```
 
-**Root Cause**: Your LLM plugin server is running an **outdated Docker image** that doesn't include the `/nesventory/identify/image` endpoint. The endpoint was added in December 2025.
+**Root Cause**: Your LLM plugin server is running an **outdated Docker image** that doesn't include the image identification endpoint. New integrations should implement `/nestarr/identify/image`; `/nesventory/identify/image` is still accepted as a legacy alias during the transition.
 
 **❌ Common Mistake**: Many users re-clone the plugin repository (`git pull`) but forget to rebuild the Docker image. The code is updated, but Docker is still running the old image!
 
@@ -279,13 +281,13 @@ docker-compose up -d
 **Option 3: Using Docker directly**
 ```bash
 # Stop the old container
-docker stop nesventory-llm
+docker stop nestarr-llm
 
 # Pull latest image
 docker pull tokendad/plugin-nesventory-llm:latest
 
 # Restart (or recreate if needed)
-docker start nesventory-llm
+docker start nestarr-llm
 ```
 
 **Verify the fix**:
@@ -294,9 +296,12 @@ docker start nesventory-llm
 curl -v http://192.168.1.102:8002/health
 
 # Test 2: Endpoint should exist (422 = exists but needs file, 404 = doesn't exist)
-curl -X POST http://192.168.1.102:8002/nesventory/identify/image
+curl -X POST http://192.168.1.102:8002/nestarr/identify/image
 # Expected: {"detail":[{"type":"missing","loc":["body","file"],...}]}
 # If you see: {"detail":"Not Found"} - the endpoint STILL doesn't exist!
+
+# Legacy alias for plugins that have not completed the rename yet
+curl -X POST http://192.168.1.102:8002/nesventory/identify/image
 ```
 
 **Still getting 404 after updating?**
@@ -307,7 +312,7 @@ curl -X POST http://192.168.1.102:8002/nesventory/identify/image
 
 ### Docker Networking Issues (Common Issue!)
 
-**IMPORTANT**: If you're running NesVentory in Docker and your plugin in another container, `localhost` or `127.0.0.1` will NOT work!
+**IMPORTANT**: If you're running Nestarr in Docker and your plugin in another container, `localhost` or `127.0.0.1` will NOT work!
 
 Inside a Docker container, `localhost` refers to the container itself, not other containers or the host machine. 
 
@@ -316,11 +321,11 @@ Inside a Docker container, `localhost` refers to the container itself, not other
 If both containers are on the same Docker network (which they are by default with docker-compose), use the **container name** as the hostname:
 
 ```
-http://nesventory-llm:8002/
+http://nestarr-llm:8002/
 ```
 
-**Example**: If your plugin's container is named `nesventory-llm` and listens on port `8002`, use:
-- Endpoint URL: `http://nesventory-llm:8002`
+**Example**: If your plugin's container is named `nestarr-llm` and listens on port `8002`, use:
+- Endpoint URL: `http://nestarr-llm:8002`
 
 You can find the container name using:
 ```bash
@@ -348,11 +353,11 @@ This works reliably when containers are on different networks or when container 
 
 1. **Connect containers to the same network**:
    ```bash
-   # Find NesVentory's network
-   docker inspect nesventory5 --format='{{range .NetworkSettings.Networks}}{{println .NetworkID}}{{end}}'
+   # Find Nestarr's network
+   docker inspect nestarr5 --format='{{range .NetworkSettings.Networks}}{{println .NetworkID}}{{end}}'
    
    # Connect the plugin container to that network
-   docker network connect NETWORK_NAME nesventory-llm
+   docker network connect NETWORK_NAME nestarr-llm
    ```
 
 2. **Use a combined docker-compose.yml** with both services in one file so they share a network automatically.
@@ -386,7 +391,7 @@ ip addr show docker0 | grep inet
 - Check plugin logs for error details
 - Verify the plugin implements the correct API specification (including `/health` endpoint)
 - Test the plugin endpoint manually with curl (see commands below)
-- Check network connectivity between NesVentory and the plugin
+- Check network connectivity between Nestarr and the plugin
 - If using Docker, see "Docker Networking Issues" above
 
 **Testing Plugin Endpoints with curl**:
@@ -396,18 +401,21 @@ ip addr show docker0 | grep inet
 curl -v http://192.168.1.102:8002/health
 
 # Test if the image identification endpoint exists (404 = endpoint missing, 422 = endpoint exists but missing file)
-curl -X POST http://192.168.1.102:8002/nesventory/identify/image
+curl -X POST http://192.168.1.102:8002/nestarr/identify/image
 
 # Test image identification with an actual image
-curl -X POST http://192.168.1.102:8002/nesventory/identify/image \
+curl -X POST http://192.168.1.102:8002/nestarr/identify/image \
   -F "file=@/path/to/image.jpg"
+
+# Legacy compatibility alias
+curl -X POST http://192.168.1.102:8002/nesventory/identify/image
 
 # Check which endpoints are available (if the plugin has docs)
 curl http://192.168.1.102:8002/docs
 ```
 
 **Common Issues**:
-- **404 Not Found** on `/nesventory/identify/image`: Plugin is running an old version. Update to latest version (see "Example Plugin Implementation" section above).
+- **404 Not Found** on `/nestarr/identify/image`: Plugin is running an old version. Update to latest version (see "Example Plugin Implementation" section above). `/nesventory/identify/image` remains documented as the legacy compatibility alias.
 - **Connection refused**: Plugin server is not running or wrong IP/port.
 - **Timeout**: Firewall blocking connection or wrong network configuration (see "Docker Networking Issues" above).
 

@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nesventory-media-pvc
-  namespace: nesventory
+  name: nestarr-media-pvc
+  namespace: nestarr
   labels:
-    app.kubernetes.io/name: nesventory
+    app.kubernetes.io/name: nestarr
     app.kubernetes.io/component: storage
 spec:
   accessModes:

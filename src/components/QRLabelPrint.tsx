@@ -18,6 +18,7 @@ import {
   getDefaultModel,
   type NiimbotModelSpec,
 } from "../lib/niimbot";
+import { STORAGE_KEYS } from "../lib/constants";
 
 // Print mode options
 export type PrintMode = "qr_only" | "qr_with_items" | "items_only";
@@ -100,8 +101,7 @@ const escapeHtml = (text: string): string => {
   return div.innerHTML;
 };
 
-// localStorage keys for print preferences
-const PRINT_PREFS_KEY = "nesventory_print_preferences";
+const PRINT_PREFS_KEY = STORAGE_KEYS.PRINT_PREFERENCES;
 
 interface PrintPreferences {
   connectionType: ConnectionType;
@@ -1156,7 +1156,7 @@ const QRLabelPrint: React.FC<QRLabelPrintProps> = (props) => {
             )}
             {connectionType === 'server' && (
               <>
-                <li>🖨️ <strong>Server NIIMBOT</strong>: NIIMBOT printer connected to NesVentory server</li>
+                <li>🖨️ <strong>Server NIIMBOT</strong>: NIIMBOT printer connected to Nestarr server</li>
                 <li>Requires configuration in User Settings → Printer tab</li>
                 {isItemMode && <li style={{ color: "#ff9800" }}>Note: Item printing via server coming soon - use Bluetooth for now</li>}
               </>

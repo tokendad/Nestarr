@@ -246,7 +246,7 @@ async def oidc_callback(
             detail="Your account is pending approval by an administrator."
         )
 
-    # Generate NesVentory JWT
+    # Generate Nestarr JWT
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     app_access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires

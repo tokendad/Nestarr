@@ -1,5 +1,5 @@
 /**
- * NesVentory - Main Application Component
+ * Nestarr - Main Application Component
  */
 
 import React, { useEffect, useState } from "react";
@@ -48,12 +48,20 @@ import {
   type User,
   type Tag,
 } from "./lib/api";
-import { PHOTO_TYPES } from "./lib/constants";
+import {
+  APP_NAME,
+  APP_REPOSITORY_URL,
+  PHOTO_TYPES,
+  STORAGE_KEYS,
+  migrateLegacyBrowserStorage,
+} from "./lib/constants";
 import type { PhotoUpload, DocumentUpload } from "./lib/types";
 
 type View = "inventory" | "media" | "user-settings" | "calendar" | "admin" | "collections";
 
 const APP_VERSION = "7.2.0";
+
+migrateLegacyBrowserStorage();
 
 const App: React.FC = () => {
   const isMobile = useIsMobile();
@@ -71,11 +79,11 @@ const App: React.FC = () => {
     return m ? m[1] : null;
   });
   const [userEmail, setUserEmail] = useState<string | undefined>(
-    () => localStorage.getItem("NesVentory_user_email") || undefined
+    () => localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || undefined
   );
   const [currentUser, setCurrentUser] = useState<User | null>(
     () => {
-      const stored = localStorage.getItem("NesVentory_currentUser");
+      const stored = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
       return stored ? JSON.parse(stored) : null;
     }
   );
@@ -131,12 +139,12 @@ const App: React.FC = () => {
           created_at: user.created_at,
           updated_at: user.updated_at,
         };
-        localStorage.setItem("NesVentory_currentUser", JSON.stringify(safeUser));
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(safeUser));
         if (user.email) setUserEmail(user.email);
         setToken("authenticated");
       })
       .catch(() => {
-        localStorage.removeItem("NesVentory_currentUser");
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       })
       .finally(() => setSessionChecked(true));
   }, []);
@@ -200,7 +208,7 @@ const App: React.FC = () => {
         created_at: user.created_at,
         updated_at: user.updated_at,
       };
-      localStorage.setItem("NesVentory_currentUser", JSON.stringify(safeUser));
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(safeUser));
     } catch (err: any) {
       console.error("Failed to load current user:", err);
       // If unauthorized, logout to clear stale session
@@ -259,8 +267,8 @@ const App: React.FC = () => {
     });
 
     // Clear user data from localStorage
-    localStorage.removeItem("NesVentory_user_email");
-    localStorage.removeItem("NesVentory_currentUser");
+    localStorage.removeItem(STORAGE_KEYS.USER_EMAIL);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
     // Note: HttpOnly cookie will be cleared by server
     setToken(null);
     setUserEmail(undefined);
@@ -386,7 +394,7 @@ const App: React.FC = () => {
       updated_at,
     };
     // You may optionally add a runtime assertion or warning if sensitive keys are present
-    localStorage.setItem("NesVentory_currentUser", JSON.stringify(safeUser));
+    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(safeUser));
   }
 
   // Filter items based on search query
@@ -638,7 +646,7 @@ const App: React.FC = () => {
         
         {/* Footer with version */}
         <footer className="app-footer">
-          NesVentory v{APP_VERSION} | <a href="https://github.com/tokendad/NesVentory" target="_blank" rel="noopener noreferrer">GitHub</a>
+          {APP_NAME} v{APP_VERSION} | <a href={APP_REPOSITORY_URL} target="_blank" rel="noopener noreferrer">GitHub</a>
         </footer>
 
         {/* Modals */}

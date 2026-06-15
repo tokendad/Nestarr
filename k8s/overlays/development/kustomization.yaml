@@ -2,9 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: nesventory-development
+  name: nestarr-development
 
-namespace: nesventory
+namespace: nestarr
 
 resources:
   - ../../base
@@ -14,7 +14,7 @@ patches:
   # Reduce replicas for development
   - target:
       kind: Deployment
-      name: nesventory
+      name: nestarr
     patch: |
       - op: replace
         path: /spec/replicas
@@ -32,7 +32,7 @@ patches:
   # Lower HPA thresholds for development
   - target:
       kind: HorizontalPodAutoscaler
-      name: nesventory-hpa
+      name: nestarr-hpa
     patch: |
       - op: replace
         path: /spec/minReplicas

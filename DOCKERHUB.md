@@ -1,17 +1,17 @@
-# NesVentory
+# Nestarr
 
-![NesVentory Logo](https://raw.githubusercontent.com/tokendad/NesVentory/main/Logo.png)
+![Nestarr Logo](https://raw.githubusercontent.com/tokendad/Nestarr/main/Logo.png)
 
 **A modern home inventory management application to track and organize your household items, locations, warranties, and maintenance schedules.**
 
-[![GitHub](https://img.shields.io/badge/GitHub-tokendad%2FNesVentory-blue?logo=github)](https://github.com/tokendad/NesVentory)
-[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/tokendad/NesVentory/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-tokendad%2FNestarr-blue?logo=github)](https://github.com/tokendad/Nestarr)
+[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/tokendad/Nestarr/blob/main/LICENSE)
 
 ## Quick Reference
 
 - **Maintained by:** [tokendad](https://github.com/tokendad)
-- **Source:** [GitHub Repository](https://github.com/tokendad/NesVentory)
-- **Documentation:** [README](https://github.com/tokendad/NesVentory/blob/main/README.md) | [Docker Variables](https://github.com/tokendad/NesVentory/blob/main/docs/DOCKER_COMPOSE_VARIABLES.md)
+- **Source:** [GitHub Repository](https://github.com/tokendad/Nestarr)
+- **Documentation:** [README](https://github.com/tokendad/Nestarr/blob/main/README.md) | [Docker Variables](https://github.com/tokendad/Nestarr/blob/main/docs/Guides/DOCKER_COMPOSE_VARIABLES.md)
 
 ## Supported Tags
 
@@ -21,9 +21,9 @@
 - `6.x.x` - Version 6 series tags
 - `5.x.x` - Version 5 series tags (legacy)
 
-## What is NesVentory?
+## What is Nestarr?
 
-NesVentory is a self-hosted home inventory management system built with:
+Nestarr is a self-hosted home inventory management system built with:
 
 - **Backend:** FastAPI (Python 3.14)
 - **Frontend:** React + TypeScript + Vite
@@ -52,17 +52,17 @@ NesVentory is a self-hosted home inventory management system built with:
 
 ```bash
 # Create a directory for persistent data
-mkdir -p /path/to/nesventory_data
+mkdir -p /path/to/nestarr_data
 
-# Run NesVentory
+# Run Nestarr
 docker run -d \
-  --name nesventory \
+  --name nestarr \
   -p 8181:8181 \
   -e SECRET_KEY=<generate-secure-key> \
   -e JWT_SECRET_KEY=<generate-secure-key> \
   -e TZ=America/New_York \
-  -v /path/to/nesventory_data:/app/data \
-  neuman1812/nesventory:latest
+  -v /path/to/nestarr_data:/app/data \
+  neuman1812/nestarr:latest
 ```
 
 ### Using Docker Compose
@@ -73,9 +73,9 @@ Create a `docker-compose.yml` file:
 
 ```yaml
 services:
-  nesventory:
-    image: neuman1812/nesventory:latest
-    container_name: nesventory
+  nestarr:
+    image: neuman1812/nestarr:latest
+    container_name: nestarr
     restart: unless-stopped
     environment:
       PUID: 1000
@@ -85,7 +85,7 @@ services:
       JWT_SECRET_KEY: <generate-secure-key>
       APP_PORT: 8181
     volumes:
-      - /path/to/nesventory_data:/app/data
+      - /path/to/nestarr_data:/app/data
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "8181:8181"
@@ -105,9 +105,9 @@ The application comes with pre-seeded test users:
 
 | Role | Email | Password |
 |------|-------|----------|
-| **Admin** | admin@nesventory.local | admin123 |
-| **Editor** | editor@nesventory.local | editor123 |
-| **Viewer** | viewer@nesventory.local | viewer123 |
+| **Admin** | admin@nestarr.local | admin123 |
+| **Editor** | editor@nestarr.local | editor123 |
+| **Viewer** | viewer@nestarr.local | viewer123 |
 
 **Important:** Change these credentials for production use!
 
@@ -134,9 +134,11 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 | `PGID` | `1000` | Group ID for file ownership |
 | `UMASK` | `002` | File permission mask |
 | `TZ` | `Etc/UTC` | Timezone (e.g., `America/New_York`) |
-| `DB_PATH` | `/app/data/nesventory.db` | SQLite database path |
+| `DB_PATH` | `/app/data/nestarr.db` | SQLite database path |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `1440` | JWT token expiration (24 hours) |
 | `DISABLE_SIGNUPS` | `false` | Prevent new user registration |
+
+> Existing installations may still have `/app/data/nesventory.db`. Treat that file as a legacy data path during the rename window and migrate or keep it deliberately instead of deleting it.
 
 ### AI Features (Optional)
 
@@ -169,8 +171,8 @@ For hardware features like Bluetooth printing, add Linux capabilities:
 
 ```yaml
 services:
-  nesventory:
-    image: neuman1812/nesventory:latest
+  nestarr:
+    image: neuman1812/nestarr:latest
     cap_add:
       - NET_ADMIN    # Required for Bluetooth printer support
 ```
@@ -183,7 +185,7 @@ For full hardware access during development:
 
 ```yaml
 services:
-  nesventory:
+  nestarr:
     privileged: true
     volumes:
       - /dev:/dev
@@ -197,11 +199,13 @@ services:
 | `/app/data` | **Required.** SQLite database and uploaded media files |
 
 The `/app/data` volume contains:
-- `nesventory.db` - SQLite database
+- `nestarr.db` - SQLite database
 - `media/photos/` - Uploaded item photos
 - `media/documents/` - Uploaded documents
 - `media/videos/` - Uploaded videos
 - `logs/` - Application logs
+
+The previous Docker image name, `neuman1812/nesventory`, is retained as a compatibility alias for the rename transition. New deployments should use `neuman1812/nestarr`.
 
 ## Ports
 
@@ -216,7 +220,7 @@ curl http://localhost:8181/api/health
 # Response: {"status":"healthy"}
 
 curl http://localhost:8181/api/version
-# Response: {"name":"NesVentory","version":"6.7.3"}
+# Response: {"name":"Nestarr","version":"6.7.3"}
 ```
 
 ## User/Group Identifiers
@@ -235,16 +239,16 @@ Set `PUID` and `PGID` environment variables to match your host user.
 
 ## Documentation
 
-- [Docker Compose Variables Reference](https://github.com/tokendad/NesVentory/blob/main/docs/DOCKER_COMPOSE_VARIABLES.md)
-- [NIIMBOT Printer Guide](https://github.com/tokendad/NesVentory/blob/main/docs/NIIMBOT_PRINTER_GUIDE.md)
-- [CSV Import Guide](https://github.com/tokendad/NesVentory/blob/main/docs/CSV_IMPORT.md)
-- [Plugin Development](https://github.com/tokendad/NesVentory/blob/main/docs/PLUGINS.md)
+- [Docker Compose Variables Reference](https://github.com/tokendad/Nestarr/blob/main/docs/Guides/DOCKER_COMPOSE_VARIABLES.md)
+- [NIIMBOT Printer Guide](https://github.com/tokendad/Nestarr/blob/main/docs/Guides/NIIMBOT_PRINTER_GUIDE.md)
+- [CSV Import Guide](https://github.com/tokendad/Nestarr/blob/main/docs/Guides/CSV_IMPORT.md)
+- [Plugin Development](https://github.com/tokendad/Nestarr/blob/main/docs/Guides/PLUGINS.md)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/tokendad/NesVentory/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/tokendad/Nestarr/blob/main/LICENSE) file for details.
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/tokendad/NesVentory/issues)
-- **Documentation:** [GitHub Repository](https://github.com/tokendad/NesVentory)
+- **Issues:** [GitHub Issues](https://github.com/tokendad/Nestarr/issues)
+- **Documentation:** [GitHub Repository](https://github.com/tokendad/Nestarr)

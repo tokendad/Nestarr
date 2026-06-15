@@ -1,10 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nesventory-ingress
-  namespace: nesventory
+  name: nestarr-ingress
+  namespace: nestarr
   labels:
-    app.kubernetes.io/name: nesventory
+    app.kubernetes.io/name: nestarr
     app.kubernetes.io/component: ingress
   annotations:
     # Uncomment and configure based on your ingress controller
@@ -16,16 +16,16 @@ spec:
   # Uncomment if using TLS
   # tls:
   #   - hosts:
-  #       - nesventory.example.com
-  #     secretName: nesventory-tls
+  #       - nestarr.example.com
+  #     secretName: nestarr-tls
   rules:
-    - host: nesventory.example.com  # Replace with your domain
+    - host: nestarr.example.com  # Replace with your domain
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: nesventory
+                name: nestarr
                 port:
                   number: 80

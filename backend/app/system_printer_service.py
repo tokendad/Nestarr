@@ -128,7 +128,7 @@ class SystemPrinterService:
     def print_image(
         printer_name: str,
         image: Image.Image,
-        title: str = "NesVentory Label",
+        title: str = "Nestarr Label",
         options: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """
@@ -203,7 +203,7 @@ class SystemPrinterService:
     def print_pdf(
         printer_name: str,
         pdf_data: bytes,
-        title: str = "NesVentory Document",
+        title: str = "Nestarr Document",
         options: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """

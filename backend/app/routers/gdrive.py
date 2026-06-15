@@ -1,5 +1,5 @@
 """
-Google Drive backup functionality for NesVentory.
+Google Drive backup functionality for Nestarr.
 
 Allows users to:
 1. Connect their Google Drive account
@@ -193,11 +193,11 @@ def create_backup_data(db: Session, user_id: str) -> dict:
 
 def get_or_create_backup_folder(service) -> str:
     """
-    Get or create the NesVentory backup folder in Google Drive.
-    
+    Get or create the Nestarr backup folder in Google Drive.
+
     Returns the folder ID.
     """
-    folder_name = "NesVentory Backups"
+    folder_name = "Nestarr Backups"
     
     # Search for existing folder
     query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
@@ -336,7 +336,7 @@ async def create_backup(
     """
     Create a backup of the inventory and upload it to Google Drive.
     
-    The backup is stored as a JSON file in a "NesVentory Backups" folder.
+    The backup is stored as a JSON file in a "Nestarr Backups" folder.
     """
     # Get Google credentials
     creds = get_google_credentials(current_user)
@@ -361,7 +361,7 @@ async def create_backup(
         
         # Create filename with timestamp
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        filename = f"NesVentory_Backup_{timestamp}.json"
+        filename = f"Nestarr_Backup_{timestamp}.json"
         
         # Upload file
         file_metadata = {
@@ -424,18 +424,18 @@ async def list_backups(
         service = build('drive', 'v3', credentials=creds)
         
         # Get backup folder
-        folder_name = "NesVentory Backups"
+        folder_name = "Nestarr Backups"
         query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
         results = service.files().list(q=query, spaces='drive', fields='files(id)').execute()
         folders = results.get('files', [])
-        
+
         if not folders:
             return GDriveBackupList(backups=[])
-        
+
         folder_id = folders[0]['id']
-        
+
         # List backup files in folder
-        query = f"'{folder_id}' in parents and name contains 'NesVentory_Backup' and trashed=false"
+        query = f"'{folder_id}' in parents and name contains 'Nestarr_Backup' and trashed=false"
         results = service.files().list(
             q=query,
             spaces='drive',

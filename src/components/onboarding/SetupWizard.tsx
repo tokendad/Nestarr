@@ -41,7 +41,7 @@ export default function SetupWizard({ onSetupComplete }: Props) {
     <div className="wizard-overlay">
       <div className="wizard-card">
         <div className="wizard-header">
-          <h2>Welcome to NesVentory</h2>
+          <h2>Welcome to Nestarr</h2>
           <p>Let's get your inventory system set up.</p>
         </div>
 
@@ -140,7 +140,7 @@ export default function SetupWizard({ onSetupComplete }: Props) {
                 Admin account created!
               </p>
               <p style={{ margin: 0, textAlign: "center", color: "var(--muted)", fontSize: "0.9rem" }}>
-                Sign in with your new credentials to start using NesVentory. You can then
+                Sign in with your new credentials to start using Nestarr. You can then
                 set up your home and start adding items to your inventory.
               </p>
             </div>

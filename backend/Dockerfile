@@ -35,19 +35,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create user and group with specified IDs
 # Note: Uses -o to allow non-unique IDs if they conflict with base image
-RUN groupadd -o -g ${PGID} nesventory 2>/dev/null || true && \
-    useradd -o -u ${PUID} -g ${PGID} -s /bin/bash -m nesventory 2>/dev/null || true
+RUN groupadd -o -g ${PGID} nestarr 2>/dev/null || true && \
+    useradd -o -u ${PUID} -g ${PGID} -s /bin/bash -m nestarr 2>/dev/null || true
 
-# Copy Python packages to nesventory user's local directory
-COPY --from=builder /root/.local /home/nesventory/.local
-RUN chown -R nesventory:nesventory /home/nesventory/.local
-ENV PATH=/home/nesventory/.local/bin:$PATH
+# Copy Python packages to nestarr user's local directory
+COPY --from=builder /root/.local /home/nestarr/.local
+RUN chown -R nestarr:nestarr /home/nestarr/.local
+ENV PATH=/home/nestarr/.local/bin:$PATH
 
 # Copy application files and set ownership
-COPY --chown=nesventory:nesventory . /app
+COPY --chown=nestarr:nestarr . /app
 
-# Switch to nesventory user
-USER nesventory
+# Switch to nestarr user
+USER nestarr
 
 EXPOSE 8181
 

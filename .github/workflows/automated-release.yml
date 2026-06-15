@@ -298,7 +298,7 @@ jobs:
           RELEASE_FILE="docs/releases/RELEASE_NOTES_v${NEW_VERSION}.md"
           
           {
-            echo "# NesVentory v${NEW_VERSION}"
+            echo "# Nestarr v${NEW_VERSION}"
             echo ""
             echo "Release tag: https://github.com/${REPO}/releases/tag/v${NEW_VERSION}"
             echo ""

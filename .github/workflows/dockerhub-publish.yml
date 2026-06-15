@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: neuman1812/nesventory
+  IMAGE_NAME: neuman1812/nestarr
 
 jobs:
   check-prs:

@@ -1,6 +1,6 @@
-# Contributing to NesVentory
+# Contributing to Nestarr
 
-Thank you for your interest in contributing to NesVentory! This document outlines the contribution process and our branching strategy.
+Thank you for your interest in contributing to Nestarr! This document outlines the contribution process and our branching strategy.
 
 ## 📋 Table of Contents
 
@@ -13,7 +13,7 @@ Thank you for your interest in contributing to NesVentory! This document outline
 
 ## 🌳 Branching Strategy
 
-NesVentory uses **main** as the primary branch for releases and deployments:
+Nestarr uses **main** as the primary branch for releases and deployments:
 
 ```
 Feature branches → main (production)
@@ -227,8 +227,8 @@ Release notes are automatically generated from:
 
 ```bash
 # Clone the repository
-git clone https://github.com/tokendad/NesVentory.git
-cd NesVentory
+git clone https://github.com/tokendad/Nestarr.git
+cd Nestarr
 
 # Install frontend dependencies
 npm install
@@ -243,7 +243,7 @@ cd backend && uvicorn app.main:app --reload  # Backend
 
 ## ❓ Questions?
 
-- **Issues**: [GitHub Issues](https://github.com/tokendad/NesVentory/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/tokendad/NesVentory/discussions)
+- **Issues**: [GitHub Issues](https://github.com/tokendad/Nestarr/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/tokendad/Nestarr/discussions)
 
-Thank you for contributing to NesVentory! 🏠📦
+Thank you for contributing to Nestarr! 🏠📦

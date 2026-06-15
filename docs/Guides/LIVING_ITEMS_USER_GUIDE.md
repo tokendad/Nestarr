@@ -2,7 +2,7 @@
 
 ## Overview
 
-Living Items is a feature in NesVentory v6.15.0+ that allows you to track people, pets, and plants as part of your home inventory. This guide explains how to use the feature effectively.
+Living Items is a feature in Nestarr v6.15.0+ that allows you to track people, pets, and plants as part of your home inventory. This guide explains how to use the feature effectively.
 
 ## What are Living Items?
 
@@ -52,7 +52,7 @@ Plants are tracked as regular items with the "Living" tag. They can be placed in
 | **Relationship Type** | Type (self, family, pet, plant) | ✅ Yes |
 | **Contact Info** | Phone, email, address, notes | ❌ No |
 | **Profile Photo** | Photo (circular crop) | ❌ No |
-| **Link to User Account** | Associate with a NesVentory user | ❌ No |
+| **Link to User Account** | Associate with a Nestarr user | ❌ No |
 
 ### People-Specific
 
@@ -98,7 +98,7 @@ Plants are regular items tagged as "Living". Store care information in custom fi
 
 ### Age Calculation
 
-If a birthdate is provided, NesVentory automatically calculates and displays age:
+If a birthdate is provided, Nestarr automatically calculates and displays age:
 - **Format:** "35 years old (born 1990-05-15)"
 - **Updates:** Age recalculates each time you view the item
 
@@ -152,14 +152,14 @@ GET /api/items?is_living=true&location_id=<home-uuid>
 
 ### Mobile App
 
-The [NesVentory Mobile App](https://github.com/tokendad/NesventoryApp) will support Living Items in a future update. See [NesVentoryApp#66](https://github.com/tokendad/NesventoryApp/issues/66) for progress.
+The [Nestarr Mobile App](https://github.com/tokendad/Android-Nestarr) will support Living Items in a future update. See [Android-Nestarr#66](https://github.com/tokendad/Android-Nestarr/issues/66) for progress.
 
 ## Tips & Best Practices
 
 ### For People
 
 1. **Use "Self" for yourself** - Mark your own entry with `relationship_type = "self"`
-2. **Link to user accounts** - Associate people with NesVentory user accounts for better tracking
+2. **Link to user accounts** - Associate people with Nestarr user accounts for better tracking
 3. **Keep emergency contacts updated** - Regularly review and update backup contact info
 4. **Use profile photos** - Makes the interface more personal and easier to navigate
 
@@ -202,8 +202,8 @@ The [NesVentory Mobile App](https://github.com/tokendad/NesventoryApp) will supp
 ## Support
 
 For bugs, feature requests, or questions:
-- GitHub Issues: https://github.com/tokendad/NesVentory/issues
-- Mobile App Issues: https://github.com/tokendad/NesventoryApp/issues
+- GitHub Issues: https://github.com/tokendad/Nestarr/issues
+- Mobile App Issues: https://github.com/tokendad/Android-Nestarr/issues
 
 ---
 

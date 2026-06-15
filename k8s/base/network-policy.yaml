@@ -1,15 +1,15 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: nesventory-network-policy
-  namespace: nesventory
+  name: nestarr-network-policy
+  namespace: nestarr
   labels:
-    app.kubernetes.io/name: nesventory
+    app.kubernetes.io/name: nestarr
     app.kubernetes.io/component: security
 spec:
   podSelector:
     matchLabels:
-      app: nesventory
+      app: nestarr
   policyTypes:
     - Ingress
     - Egress
@@ -61,9 +61,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: postgres-network-policy
-  namespace: nesventory
+  namespace: nestarr
   labels:
-    app.kubernetes.io/name: nesventory
+    app.kubernetes.io/name: nestarr
     app.kubernetes.io/component: security
 spec:
   podSelector:
@@ -73,11 +73,11 @@ spec:
     - Ingress
     - Egress
   ingress:
-    # Only allow connections from nesventory app
+    # Only allow connections from nestarr app
     - from:
         - podSelector:
             matchLabels:
-              app: nesventory
+              app: nestarr
       ports:
         - protocol: TCP
           port: 5432

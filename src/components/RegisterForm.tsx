@@ -121,7 +121,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onCancel }) => {
 
     google.accounts.id.prompt((notification: any) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        setError("Google Sign-In popup was blocked. Please enable popups and try again.");
+        setError("Google One Tap sign-in is unavailable. This is common in incognito mode or when third-party cookies are blocked. Please register with a username and password instead.");
         setGoogleLoading(false);
       }
     });

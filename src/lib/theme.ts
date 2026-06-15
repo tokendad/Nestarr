@@ -1,4 +1,6 @@
-// Theme configuration for NesVentory
+// Theme configuration for Nestarr
+
+import { STORAGE_KEYS } from "./constants";
 
 export type ThemeMode = 'system' | 'dark' | 'light';
 export type ColorPalette = 'blue' | 'green' | 'red' | 'purple' | 'orange' | 'teal';
@@ -8,7 +10,7 @@ export interface ThemeConfig {
   colorPalette: ColorPalette;
 }
 
-const THEME_STORAGE_KEY = 'NesVentory_theme';
+const THEME_STORAGE_KEY = STORAGE_KEYS.THEME;
 
 export const DEFAULT_THEME: ThemeConfig = {
   mode: 'system',

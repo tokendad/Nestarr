@@ -1,9 +1,9 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # Example Terraform Variables File
 # Copy this file to terraform.tfvars and update with your values
 
 # Project Settings
-project_name = "nesventory"
+project_name = "nestarr"
 aws_region   = "us-east-1"
 environment  = "production"  # development, staging, or production
 
@@ -22,8 +22,8 @@ eks_node_disk_size      = 50
 db_instance_class          = "db.t3.micro"
 db_allocated_storage       = 20
 db_max_allocated_storage   = 100
-db_name                    = "nesventory"
-db_username                = "nesventory"
+db_name                    = "nestarr"
+db_username                = "nestarr"
 db_password                = "CHANGE-ME-TO-A-STRONG-PASSWORD"  # Required: Set a strong password
 db_multi_az                = false  # Set to true for production
 db_backup_retention_period = 7
@@ -32,5 +32,5 @@ db_backup_retention_period = 7
 s3_force_destroy        = false  # Set to true to allow Terraform to delete the bucket
 s3_versioning_enabled   = true
 # For production, restrict CORS to your specific domain:
-# s3_cors_allowed_origins = ["https://nesventory.example.com"]
+# s3_cors_allowed_origins = ["https://nestarr.example.com"]
 s3_cors_allowed_origins = ["*"]

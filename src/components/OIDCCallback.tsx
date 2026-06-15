@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { oidcCallback } from "../lib/api";
+import { APP_NAME } from "../lib/constants";
 
 interface OIDCCallbackProps {
   onSuccess: (token: string, email: string) => void;
@@ -61,7 +62,7 @@ const OIDCCallback: React.FC<OIDCCallbackProps> = ({ onSuccess, onError }) => {
     <div className="login-wrapper">
       <div className="login-card">
         <div className="login-header">
-          <img src="/logo.png" alt="NesVentory" className="login-logo" />
+          <img src="/logo.png" alt={APP_NAME} className="login-logo" />
           <p className="muted">{status}</p>
         </div>
         <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>

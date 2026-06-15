@@ -582,7 +582,7 @@ def print_to_system_printer(
         result = SystemPrinterService.print_image(
             printer_name=request.printer_name,
             image=label_image,
-            title=f"NesVentory - {request.label_text}",
+            title=f"Nestarr - {request.label_text}",
         )
 
         if result["success"]:
@@ -651,7 +651,7 @@ def print_location_to_system_printer(
         result = SystemPrinterService.print_image(
             printer_name=printer_name,
             image=label_image,
-            title=f"NesVentory - {label_text}",
+            title=f"Nestarr - {label_text}",
         )
 
         if result["success"]:
@@ -720,7 +720,7 @@ def print_item_to_system_printer(
         result = SystemPrinterService.print_image(
             printer_name=printer_name,
             image=label_image,
-            title=f"NesVentory - {label_text}",
+            title=f"Nestarr - {label_text}",
         )
 
         if result["success"]:

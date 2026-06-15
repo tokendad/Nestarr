@@ -1,5 +1,5 @@
 """
-Dynamic CORS Middleware for NesVentory.
+Dynamic CORS Middleware for Nestarr.
 
 When CORS_ORIGINS is not configured (the default for self-hosted deployments),
 this middleware reflects the requesting Origin back in Access-Control-Allow-Origin.

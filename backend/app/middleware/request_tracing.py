@@ -1,5 +1,5 @@
 """
-Request tracing middleware for NesVentory.
+Request tracing middleware for Nestarr.
 
 This middleware:
 - Generates a unique request ID for each request

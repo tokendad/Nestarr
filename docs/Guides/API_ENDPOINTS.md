@@ -1,6 +1,6 @@
-# NesVentory API Documentation
+# Nestarr API Documentation
 
-This document provides comprehensive documentation for all API endpoints in the NesVentory application.
+This document provides comprehensive documentation for all API endpoints in the Nestarr application.
 
 ## Table of Contents
 
@@ -40,7 +40,7 @@ The application runs on port **8181** by default (configurable via `APP_PORT` en
 
 ## Authentication
 
-NesVentory uses JWT (JSON Web Token) based authentication. Most endpoints require authentication via Bearer token or HttpOnly cookie.
+Nestarr uses JWT (JSON Web Token) based authentication. Most endpoints require authentication via Bearer token or HttpOnly cookie.
 
 ### Login (Password-based)
 
@@ -1254,7 +1254,7 @@ Test all enabled AI providers and plugins in priority order. Returns a summary o
 2. Enabled AI providers (sorted by priority)
 
 **Provider-Specific Tests:**
-- **Plugins**: Calls the `/health` endpoint and checks for the `/nesventory/identify/image` endpoint
+- **Plugins**: Calls the `/health` endpoint and checks for the `/nestarr/identify/image` endpoint. The legacy `/nesventory/identify/image` alias remains supported during the rename transition.
 - **Gemini**: Makes a minimal `generate_content` call via the `google-genai` SDK to verify the API key and model
 - **ChatGPT/OpenAI**: Verifies the API key by calling the `/v1/models` endpoint
 
@@ -1387,7 +1387,7 @@ List all backups on Google Drive.
   "backups": [
     {
       "id": "file_id",
-      "name": "nesventory_backup_20240115.db",
+      "name": "nestarr_backup_20240115.db",
       "created_time": "2024-01-15T10:00:00Z",
       "size": "2048000"
     }
@@ -1701,7 +1701,7 @@ Endpoints for managing application logs (admin only).
 ```json
 [
   {
-    "name": "nesventory.log",
+    "name": "nestarr.log",
     "size": "1024000",
     "modified": "2024-01-15T10:00:00Z"
   }
@@ -1747,7 +1747,7 @@ Get comprehensive system status including health, version, and database informat
 ```json
 {
   "application": {
-    "name": "NesVentory",
+    "name": "Nestarr",
     "version": "1.0.0",
     "status": "ok"
   },
@@ -1755,10 +1755,12 @@ Get comprehensive system status including health, version, and database informat
     "status": "healthy",
     "version": "16.1",
     "size": "50.5 MB",
-    "location": "/app/data/nesventory.db"
+    "location": "/app/data/nestarr.db"
   }
 }
 ```
+
+Existing installations may still report legacy paths such as `/app/data/nesventory.db` during the rename window. Treat those as compatibility data paths, not as new-deployment defaults.
 
 ### Get Health Status
 
@@ -1783,7 +1785,7 @@ Get application version information. No authentication required.
 ```json
 {
   "version": "1.0.0",
-  "name": "NesVentory"
+  "name": "Nestarr"
 }
 ```
 

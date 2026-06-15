@@ -1,5 +1,5 @@
 """
-Storage abstraction layer for NesVentory.
+Storage abstraction layer for Nestarr.
 
 This module provides a unified interface for file storage, supporting both
 local filesystem and AWS S3 backends. The storage backend is selected based

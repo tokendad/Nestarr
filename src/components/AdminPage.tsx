@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import NetworkDiscoveryWizard from "./onboarding/NetworkDiscoveryWizard";
 import LocalLLMSettings from "./LocalLLMSettings";
+import { STORAGE_KEYS } from "../lib/constants";
 import {
   fetchUsers,
   updateUser,
@@ -112,7 +113,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
   
   // Custom Fields state
   const [customFields, setCustomFields] = useState<DynamicField[]>(() => {
-    const saved = localStorage.getItem("NesVentory_CustomFieldsTemplate");
+    const saved = localStorage.getItem(STORAGE_KEYS.CUSTOM_FIELDS_TEMPLATE);
     return saved ? JSON.parse(saved) : [
       { label: "Related URL", value: "", type: "url" },
       { label: "Notes", value: "", type: "text" }
@@ -1272,7 +1273,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
 
   // Custom Fields handlers
   function handleSaveCustomFields() {
-    localStorage.setItem("NesVentory_CustomFieldsTemplate", JSON.stringify(customFields));
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_FIELDS_TEMPLATE, JSON.stringify(customFields));
     setCustomFieldsSuccess("Custom fields template saved successfully!");
     setTimeout(() => setCustomFieldsSuccess(null), 3000);
   }
@@ -2135,10 +2136,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
             }}>
               <strong>Log file naming convention:</strong>
               <ul style={{ margin: "0.25rem 0 0 1rem", padding: 0 }}>
-                <li><code>nesventory.log</code> - Current active log</li>
-                <li><code>nesventory.log.[date]</code> - Rotated log</li>
-                <li><code>nesventory.log.debug</code> - Debug log</li>
-                <li><code>nesventory.log.trace</code> - Trace log</li>
+                <li><code>nestarr.log</code> - Current active log</li>
+                <li><code>nestarr.log.[date]</code> - Rotated log</li>
+                <li><code>nestarr.log.debug</code> - Debug log</li>
+                <li><code>nestarr.log.trace</code> - Trace log</li>
               </ul>
             </div>
           </div>
@@ -2157,7 +2158,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
               padding: "1rem"
             }}>
               <p style={{ margin: "0 0 0.75rem 0", fontSize: "0.85rem" }}>
-                This will open a new GitHub issue on the NesVentory repository with:
+                This will open a new GitHub issue on the Nestarr repository with:
               </p>
               <ul style={{ margin: "0 0 1rem 1rem", padding: 0, fontSize: "0.85rem" }}>
                 <li>System information (app version, database type, platform)</li>
@@ -2446,7 +2447,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
             <div className="form-group" style={{ paddingBottom: "1rem", marginBottom: "1rem", borderBottom: "1px solid var(--border-subtle)" }}>
               <label>💾 Google Drive Backup</label>
               <small style={{ color: "var(--muted)", fontSize: "0.875rem", display: "block", marginBottom: "0.75rem" }}>
-                Backup the entire NesVentory database to Google Drive. This is a system-wide backup.
+                Backup the entire Nestarr database to Google Drive. This is a system-wide backup.
               </small>
               
               {serverError && (
@@ -3456,7 +3457,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose, currentUserId, embedded 
                 type="text"
                 value={pluginFormData.name || ''}
                 onChange={(e) => setPluginFormData({ ...pluginFormData, name: e.target.value })}
-                placeholder="e.g., NesVentory Custom LLM"
+                placeholder="e.g., Nestarr Custom LLM"
               />
             </div>
 

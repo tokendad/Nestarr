@@ -168,7 +168,7 @@ def run_migrations():
                 was_override BOOLEAN NOT NULL,
                 reward NUMERIC(4,3) NOT NULL,
                 user_action VARCHAR(20),
-                source VARCHAR(50) NOT NULL DEFAULT 'nesventory',
+                source VARCHAR(50) NOT NULL DEFAULT 'nestarr',
                 created_at TIMESTAMP NOT NULL
             )
         """))
@@ -406,7 +406,7 @@ def ensure_home_location():
 ensure_home_location()
 
 app = FastAPI(
-    title="Nesventory API",
+    title="Nestarr API",
     version=settings.VERSION,
 )
 

@@ -1,4 +1,4 @@
-# NesVentory – Copilot Instructions
+# Nestarr – Copilot Instructions
 
 ## Commands
 
@@ -28,10 +28,10 @@ docker compose up --build
 
 ## Architecture
 
-NesVentory is a **single-container home inventory app**:
+Nestarr is a **single-container home inventory app**:
 - **Frontend**: React 19 + TypeScript + Vite (no JSX transform config needed; uses SWC plugin)
 - **Backend**: FastAPI (Python) serving the frontend's `dist/` as static files
-- **Database**: SQLite by default (`./data/nesventory.db` locally, `/app/data/nesventory.db` in Docker). PostgreSQL is supported via env vars but not the default.
+- **Database**: SQLite by default (`./data/nestarr.db` locally, `/app/data/nestarr.db` in Docker). PostgreSQL is supported via env vars but not the default.
 - **API**: Frontend calls `/api/...` on the same origin. `VITE_API_BASE_URL` defaults to `""` (same-origin). No proxy needed in production.
 
 ### Frontend state management

@@ -7,14 +7,14 @@
 ### USB Printing (Desktop/Laptop)
 1. Plug your NIIMBOT printer into your computer via USB
 2. Turn on the printer
-3. In NesVentory, navigate to any **Location** or **Item**
+3. In Nestarr, navigate to any **Location** or **Item**
 4. Click the **"🖨️ Print Label"** button
 5. Select **"USB"** as the connection method
 6. Click **"Direct Print"** and select your printer when prompted
 
 ### Bluetooth Printing (Mobile/Laptop)
 1. Turn on your NIIMBOT printer (it will be discoverable)
-2. In NesVentory, navigate to any **Location** or **Item**
+2. In Nestarr, navigate to any **Location** or **Item**
 3. Click the **"🖨️ Print Label"** button
 4. Select **"Bluetooth"** as the connection method
 5. Click **"Direct Print"** and pair with your printer when prompted
@@ -25,7 +25,7 @@
 
 ## Where to Find Print Buttons
 
-Print labels are accessible from multiple locations in NesVentory:
+Print labels are accessible from multiple locations in Nestarr:
 
 ### Locations
 - **Location Cards**: Each location card has a "🖨️ Print Label" button
@@ -39,7 +39,7 @@ Print labels are accessible from multiple locations in NesVentory:
 
 ## Overview
 
-NesVentory supports thermal printing to NIIMBOT label printers. Multiple models are supported with automatic configuration based on your printer selection.
+Nestarr supports thermal printing to NIIMBOT label printers. Multiple models are supported with automatic configuration based on your printer selection.
 
 ## Supported Hardware
 
@@ -63,7 +63,7 @@ NesVentory supports thermal printing to NIIMBOT label printers. Multiple models 
 
 ## Connection Methods
 
-NesVentory offers three ways to print:
+Nestarr offers three ways to print:
 
 ### 1. USB Direct (Recommended for Desktop)
 - Printer plugged into your local computer
@@ -78,7 +78,7 @@ NesVentory offers three ways to print:
 - Best for: Mobile users, laptops without USB
 
 ### 3. Server NIIMBOT (Advanced)
-- NIIMBOT printer connected to the NesVentory server
+- NIIMBOT printer connected to the Nestarr server
 - Requires configuration in User Settings
 - Works from any device/browser
 - Best for: Shared NIIMBOT printers, multiple users
@@ -111,7 +111,7 @@ volumes:
 
 ### Usage
 
-1. In NesVentory, click **"Print Label"** on any location or item
+1. In Nestarr, click **"Print Label"** on any location or item
 2. Select **"System Printer (CUPS)"** as the connection method
 3. Choose your printer from the dropdown
 4. Click **"Print to System"**
@@ -194,7 +194,7 @@ volumes:
 - Check that the correct **Printer Model** is selected in settings (for server mode)
 
 ### Server Connection Issues (Linux)
-- The user running NesVentory must be in the `dialout` and `lp` groups
+- The user running Nestarr must be in the `dialout` and `lp` groups
 - For Docker, ensure the container has access to `/dev` and `/var/run/dbus`
 
 ---

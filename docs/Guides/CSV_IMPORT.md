@@ -1,6 +1,6 @@
 # CSV Import Documentation
 
-NesVentory supports importing inventory items from CSV (Comma-Separated Values) files. This feature allows you to bulk import items with their details, including support for downloading images from URLs.
+Nestarr supports importing inventory items from CSV (Comma-Separated Values) files. This feature allows you to bulk import items with their details, including support for downloading images from URLs.
 
 ## CSV File Requirements
 
@@ -175,4 +175,4 @@ Save this as a `.csv` file and replace the sample data with your actual inventor
 For issues or questions about CSV import:
 - Check the import log for detailed error messages
 - Review this documentation
-- File an issue on the [GitHub repository](https://github.com/tokendad/NesVentory/issues)
+- File an issue on the [GitHub repository](https://github.com/tokendad/Nestarr/issues)

@@ -2,6 +2,57 @@
  * Application constants
  */
 
+export const APP_NAME = "Nestarr";
+export const APP_REPOSITORY_URL = "https://github.com/tokendad/Nestarr";
+
+export const STORAGE_KEYS = {
+  USER_EMAIL: "Nestarr_user_email",
+  CURRENT_USER: "Nestarr_currentUser",
+  THEME: "Nestarr_theme",
+  LOCALE_CONFIG: "Nestarr_locale_config",
+  ITEM_COLUMNS: "Nestarr_itemColumns",
+  CUSTOM_FIELDS_TEMPLATE: "Nestarr_CustomFieldsTemplate",
+  PRINT_PREFERENCES: "nestarr_print_preferences",
+} as const;
+
+const LEGACY_STORAGE_KEYS = {
+  USER_EMAIL: "NesVentory_user_email",
+  CURRENT_USER: "NesVentory_currentUser",
+  THEME: "NesVentory_theme",
+  LOCALE_CONFIG: "NesVentory_locale_config",
+  ITEM_COLUMNS: "NesVentory_itemColumns",
+  CUSTOM_FIELDS_TEMPLATE: "NesVentory_CustomFieldsTemplate",
+  PRINT_PREFERENCES: "nesventory_print_preferences",
+} as const;
+
+const STORAGE_KEY_MIGRATIONS = [
+  [LEGACY_STORAGE_KEYS.USER_EMAIL, STORAGE_KEYS.USER_EMAIL],
+  [LEGACY_STORAGE_KEYS.CURRENT_USER, STORAGE_KEYS.CURRENT_USER],
+  [LEGACY_STORAGE_KEYS.THEME, STORAGE_KEYS.THEME],
+  [LEGACY_STORAGE_KEYS.LOCALE_CONFIG, STORAGE_KEYS.LOCALE_CONFIG],
+  [LEGACY_STORAGE_KEYS.ITEM_COLUMNS, STORAGE_KEYS.ITEM_COLUMNS],
+  [LEGACY_STORAGE_KEYS.CUSTOM_FIELDS_TEMPLATE, STORAGE_KEYS.CUSTOM_FIELDS_TEMPLATE],
+  [LEGACY_STORAGE_KEYS.PRINT_PREFERENCES, STORAGE_KEYS.PRINT_PREFERENCES],
+] as const;
+
+export function migrateLegacyBrowserStorage(): void {
+  if (typeof window === "undefined" || !window.localStorage) return;
+
+  for (const [legacyKey, newKey] of STORAGE_KEY_MIGRATIONS) {
+    try {
+      const legacyValue = localStorage.getItem(legacyKey);
+      if (legacyValue === null) continue;
+
+      if (localStorage.getItem(newKey) === null) {
+        localStorage.setItem(newKey, legacyValue);
+      }
+      localStorage.removeItem(legacyKey);
+    } catch (error) {
+      console.warn(`Failed to migrate browser storage key ${legacyKey}:`, error);
+    }
+  }
+}
+
 export const PHOTO_TYPES = {
   DEFAULT: "default",
   DATA_TAG: "data_tag",
@@ -288,5 +339,3 @@ export const BRANDS = [
   "Xiaomi",
   "Zara",
 ];
-
-

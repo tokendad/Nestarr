@@ -1,4 +1,4 @@
-"""Middleware package for NesVentory."""
+"""Middleware package for Nestarr."""
 
 from .request_tracing import RequestTracingMiddleware
 from .cors import DynamicCORSMiddleware

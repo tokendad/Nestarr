@@ -1,4 +1,4 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # Terraform Outputs
 
 # VPC Outputs
@@ -93,9 +93,14 @@ output "ecr_repository_arn" {
 }
 
 # IAM Outputs
+output "nestarr_s3_role_arn" {
+  description = "ARN of the IAM role for Nestarr S3 access (IRSA)"
+  value       = aws_iam_role.nestarr_s3.arn
+}
+
 output "nesventory_s3_role_arn" {
-  description = "ARN of the IAM role for NesVentory S3 access (IRSA)"
-  value       = aws_iam_role.nesventory_s3.arn
+  description = "Deprecated compatibility output. Use nestarr_s3_role_arn."
+  value       = aws_iam_role.nestarr_s3.arn
 }
 
 # kubectl configuration command

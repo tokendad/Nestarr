@@ -1,6 +1,6 @@
-# NesVentory API Contract
+# Nestarr API Contract
 
-This document describes the REST API contract between the NesVentory server and its consumers — primarily the **[NesVentory Android App](https://github.com/tokendad/NesventoryApp)**.
+This document describes the REST API contract between the Nestarr server and its consumers — primarily the **[Nestarr Android App](https://github.com/tokendad/Android-Nestarr)**.
 
 The server auto-generates a live OpenAPI spec at **`/api/openapi.json`** (also browsable at `/api/docs`). This document captures the **change history** and **breaking-change policy** that the spec alone doesn't convey.
 
@@ -8,7 +8,7 @@ The server auto-generates a live OpenAPI spec at **`/api/openapi.json`** (also b
 
 ## Base URL
 
-All API endpoints are prefixed with `/api/`. The app should let users configure the server's base URL (e.g., `https://nesventory.example.com`).
+All API endpoints are prefixed with `/api/`. The app should let users configure the server's base URL (e.g., `https://nestarr.example.com`).
 
 ## Authentication
 
@@ -376,7 +376,7 @@ POST   /api/plugins/{id}/test               Test plugin connection
 POST   /api/import/csv                      Bulk import items from CSV
 POST   /api/encircle/preview                Preview Encircle JSON import
 POST   /api/encircle                        Execute Encircle JSON import
-POST   /api/network/scan                    Scan network for NesVentory instances
+POST   /api/network/scan                    Scan network for Nestarr instances
 POST   /api/network/import                  Import items from discovered instance
 ```
 
@@ -437,7 +437,7 @@ See `/api/openapi.json` for the full list with request/response schemas.
 
 1. A **`## API Changes`** section is added to the relevant version entry in `CHANGELOG.md`
 2. A new row is added to the [Change Log](#change-log) table below
-3. An issue is opened in [NesventoryApp](https://github.com/tokendad/NesventoryApp/issues) linking to the changelog entry
+3. An issue is opened in [Android-Nestarr](https://github.com/tokendad/Android-Nestarr/issues) linking to the changelog entry
 
 ---
 
@@ -460,7 +460,7 @@ See `/api/openapi.json` for the full list with request/response schemas.
 
 ## Living Items
 
-**Added in v6.15.0** — NesVentory now supports tracking people, pets, and plants as "living items" with special fields.
+**Added in v6.15.0** — Nestarr now supports tracking people, pets, and plants as "living items" with special fields.
 
 ### Item Type Detection
 

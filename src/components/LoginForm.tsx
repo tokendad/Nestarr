@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { login, getGoogleOAuthStatus, googleAuth, getRegistrationStatus, getOIDCStatus, getOIDCLoginUrl } from "../lib/api";
+import { APP_NAME, STORAGE_KEYS } from "../lib/constants";
 
 interface LoginFormProps {
   onSuccess: (token: string, email: string) => void;
@@ -39,7 +40,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onRegisterClick, onMus
         // If JWT parsing fails, we'll fetch user info from /users/me later
         console.warn("Could not parse email from Google credential");
       }
-      localStorage.setItem("NesVentory_user_email", userEmail);
+      localStorage.setItem(STORAGE_KEYS.USER_EMAIL, userEmail);
       // Token is stored in HttpOnly cookie, pass a truthy value to indicate authenticated state
       onSuccess("authenticated", userEmail);
     } catch (err: any) {
@@ -119,7 +120,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onRegisterClick, onMus
     try {
       const resp = await login(email, password);
       // Token is now stored in HttpOnly cookie - no need to store in localStorage
-      localStorage.setItem("NesVentory_user_email", email);
+      localStorage.setItem(STORAGE_KEYS.USER_EMAIL, email);
 
       // Check if user must change password
       if (resp.must_change_password && onMustChangePassword) {
@@ -155,8 +156,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onRegisterClick, onMus
     // Prompt One Tap or redirect to Google Sign-In
     google.accounts.id.prompt((notification: any) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // Fall back to redirect flow if One Tap is not available
-        setError("Google Sign-In popup was blocked. Please enable popups and try again.");
+        // One Tap is unavailable — common causes: third-party cookies blocked (incognito/strict
+        // browser settings), user dismissed the prompt before, or no active Google session.
+        setError("Google One Tap sign-in is unavailable. This is common in incognito mode or when third-party cookies are blocked. Please sign in with your username and password instead.");
         setGoogleLoading(false);
       }
     });
@@ -183,7 +185,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onRegisterClick, onMus
     <div className="login-wrapper">
       <div className="login-card">
         <div className="login-header">
-          <img src="/logo.png" alt="NesVentory" className="login-logo" />
+          <img src="/logo.png" alt={APP_NAME} className="login-logo" />
           <p className="muted">Sign in to your home inventory</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">

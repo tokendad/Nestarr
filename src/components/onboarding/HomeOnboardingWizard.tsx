@@ -77,7 +77,7 @@ export default function HomeOnboardingWizard({ onComplete, onSkip }: Props) {
           <>
             <div className="wizard-body">
               <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.95rem", lineHeight: 1.6 }}>
-                NesVentory organises your items by location. Start by adding your home —
+                Nestarr organises your items by location. Start by adding your home —
                 you can add more locations later.
               </p>
             </div>

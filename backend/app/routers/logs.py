@@ -1,5 +1,5 @@
 """
-Log settings router for NesVentory admin panel.
+Log settings router for Nestarr admin panel.
 Handles log rotation, deletion, and log level configuration.
 """
 import json
@@ -30,7 +30,7 @@ logger = get_logger(__name__)
 
 # GitHub repository for issue reporting (can be overridden)
 GITHUB_REPO_OWNER = "tokendad"
-GITHUB_REPO_NAME = "NesVentory"
+GITHUB_REPO_NAME = "Nestarr"
 
 # Default log settings
 LOG_DIR = Path("/app/data/logs")
@@ -144,13 +144,13 @@ def format_file_size(size_bytes: int) -> str:
 
 def get_log_type(filename: str) -> str:
     """Determine log type from filename."""
-    if filename == "nesventory.log":
+    if filename == "nestarr.log":
         return "current"
     elif ".debug" in filename:
         return "debug"
     elif ".trace" in filename:
         return "trace"
-    elif filename.startswith("nesventory.log."):
+    elif filename.startswith("nestarr.log."):
         return "rotated"
     return "unknown"
 
@@ -160,10 +160,10 @@ def get_log_files() -> list[dict]:
     ensure_log_dir_exists()
     log_files = []
     
-    # Pattern for log files: nesventory.log*
+    # Pattern for log files: nestarr.log*
     patterns = [
-        "nesventory.log",
-        "nesventory.log.*",
+        "nestarr.log",
+        "nestarr.log.*",
     ]
     
     for pattern in patterns:
@@ -201,7 +201,7 @@ def get_log_stats() -> LogStats:
     # Count rotated files and find oldest
     rotated_files = []
     try:
-        for filepath in LOG_DIR.glob("nesventory.log.*"):
+        for filepath in LOG_DIR.glob("nestarr.log.*"):
             if filepath.is_file() and filepath.name != "log_settings.json":
                 rotated_files.append((filepath.name, filepath.stat().st_mtime))
     except OSError:
@@ -473,7 +473,7 @@ async def get_issue_report_data(
     
     # Get error logs (last 50 lines from current log file)
     error_logs = ""
-    current_log = LOG_DIR / "nesventory.log"
+    current_log = LOG_DIR / "nestarr.log"
     if current_log.exists():
         try:
             with open(current_log, 'r', encoding='utf-8', errors='replace') as f:
@@ -506,7 +506,7 @@ async def get_issue_report_data(
         "## Actual Behavior\n"
         "[What actually happened?]\n\n"
         "## System Information\n"
-        f"- NesVentory Version: {app_version}\n"
+        f"- Nestarr Version: {app_version}\n"
         f"- Database Type: {database_type}\n"
         f"- Log Level: {log_settings.log_level}\n"
         f"{system_info}\n\n"

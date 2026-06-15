@@ -2,9 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: nesventory-base
+  name: nestarr-base
 
-namespace: nesventory
+namespace: nestarr
 
 resources:
   - namespace.yaml
@@ -21,4 +21,4 @@ resources:
 labels:
   - pairs:
       app.kubernetes.io/managed-by: kustomize
-      app.kubernetes.io/part-of: nesventory
+      app.kubernetes.io/part-of: nestarr

@@ -2,6 +2,8 @@
  * Locale configuration and management
  */
 
+import { STORAGE_KEYS } from "./constants";
+
 export interface LocaleConfig {
   locale: string;
   currency: string;
@@ -9,7 +11,7 @@ export interface LocaleConfig {
   dateFormat: 'short' | 'medium' | 'long' | 'full';
 }
 
-const LOCALE_STORAGE_KEY = 'NesVentory_locale_config';
+const LOCALE_STORAGE_KEY = STORAGE_KEYS.LOCALE_CONFIG;
 
 const DEFAULT_CONFIG: LocaleConfig = {
   locale: navigator.language || 'en-US',
