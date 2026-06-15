@@ -1,10 +1,10 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # RDS PostgreSQL Configuration
 
 # DB Subnet Group
 resource "aws_db_subnet_group" "main" {
   name        = "${var.project_name}-db-subnet-group"
-  description = "Subnet group for NesVentory RDS"
+  description = "Subnet group for Nestarr RDS"
   subnet_ids  = aws_subnet.private[*].id
 
   tags = {
@@ -32,10 +32,10 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
 
-  multi_az               = var.db_multi_az
-  publicly_accessible    = false
-  deletion_protection    = var.environment == "production"
-  skip_final_snapshot    = var.environment != "production"
+  multi_az                  = var.db_multi_az
+  publicly_accessible       = false
+  deletion_protection       = var.environment == "production"
+  skip_final_snapshot       = var.environment != "production"
   final_snapshot_identifier = var.environment == "production" ? "${var.project_name}-db-final-snapshot" : null
 
   backup_retention_period = var.db_backup_retention_period

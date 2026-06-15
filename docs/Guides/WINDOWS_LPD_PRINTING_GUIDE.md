@@ -1,10 +1,10 @@
 # Windows LPD Printing Guide for Docker
 
-This guide explains how to enable printing from NesVentory running in Docker to printers connected to a Windows host.
+This guide explains how to enable printing from Nestarr running in Docker to printers connected to a Windows host.
 
 ## The Challenge
 
-When NesVentory runs in a Docker container (Linux-based), it cannot directly access printers connected to the Windows host. This is because:
+When Nestarr runs in a Docker container (Linux-based), it cannot directly access printers connected to the Windows host. This is because:
 
 1. Docker containers are isolated from the host system
 2. Linux containers cannot communicate with the Windows Print Spooler
@@ -17,7 +17,7 @@ The Line Printer Daemon (LPD) protocol allows network printing from the Docker c
 ### How It Works
 
 ```
-NesVentory (Docker) → LPD Protocol → Windows LPD Service → Printer
+Nestarr (Docker) → LPD Protocol → Windows LPD Service → Printer
 ```
 
 ---
@@ -49,9 +49,9 @@ NesVentory (Docker) → LPD Protocol → Windows LPD Service → Printer
 2. Run: `ipconfig`
 3. Find your IPv4 address (e.g., `192.168.1.100`)
 
-### Step 4: Configure NesVentory
+### Step 4: Configure Nestarr
 
-In NesVentory's printer settings, configure the server printer to use the LPD network address:
+In Nestarr's printer settings, configure the server printer to use the LPD network address:
 
 - **Connection Type**: Network/LPD
 - **Address**: `lpd://192.168.1.100/HP_Printer`
@@ -98,7 +98,7 @@ If LPD setup is too complex, consider using PDF printing:
 
 1. Install a PDF printer on Windows (e.g., Microsoft Print to PDF)
 2. Share it via LPD
-3. NesVentory sends print jobs as PDF
+3. Nestarr sends print jobs as PDF
 4. You can then print the PDF from Windows
 
 ---
@@ -117,5 +117,5 @@ We're working on simpler solutions including:
 
 If you encounter issues:
 
-1. Check the [NIIMBOT Printer Guide](nimmbott/NIIMBOT_PRINTER_GUIDE.md) for direct USB/Bluetooth printing (no Docker complications)
-2. Report issues at [GitHub Issues](https://github.com/tokendad/NesVentory/issues)
+1. Check the [NIIMBOT Printer Guide](NIIMBOT_PRINTER_GUIDE.md) for direct USB/Bluetooth printing (no Docker complications)
+2. Report issues at [GitHub Issues](https://github.com/tokendad/Nestarr/issues)

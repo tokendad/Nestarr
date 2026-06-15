@@ -1,6 +1,6 @@
-# NesVentory Kubernetes Deployment
+# Nestarr Kubernetes Deployment
 
-This directory contains Kubernetes manifests for deploying NesVentory with a highly available PostgreSQL database and auto-scaling capabilities.
+This directory contains Kubernetes manifests for deploying Nestarr with a highly available PostgreSQL database and auto-scaling capabilities.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ This directory contains Kubernetes manifests for deploying NesVentory with a hig
 │         │                                        │              │
 │         ▼                                        ▼              │
 │  ┌────────────────────────────────────────────────────────┐     │
-│  │              NesVentory Deployment (HPA)               │     │
+│  │              Nestarr Deployment (HPA)               │     │
 │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐              │     │
 │  │  │  Pod 1   │ │  Pod 2   │ │  Pod N   │   (2-10+)   │     │
 │  │  └──────────┘ └──────────┘ └──────────┘              │     │
@@ -43,12 +43,20 @@ This directory contains Kubernetes manifests for deploying NesVentory with a hig
 ## Features
 
 - **High Availability Database**: PostgreSQL StatefulSet with 3 replicas
-- **Auto-scaling**: HorizontalPodAutoscaler scales NesVentory pods based on CPU/memory usage
+- **Auto-scaling**: HorizontalPodAutoscaler scales Nestarr pods based on CPU/memory usage
 - **Pod Disruption Budgets**: Ensures minimum availability during maintenance
 - **Network Policies**: Restricts traffic to necessary communications only
 - **Persistent Storage**: Separate PVCs for media files and database data
 - **Security**: Non-root containers, dropped capabilities, read-only where possible
 - **Kustomize Overlays**: Separate configurations for development and production
+
+## Rename Upgrade Caution
+
+The manifests now use `nestarr` for namespaces, labels, services, secrets, PVCs,
+and image names. Applying these manifests to a live cluster that still uses
+NesVentory resource names can create new resources instead of migrating existing
+ones. Back up persistent volumes and secrets first, then plan explicit `kubectl`
+copy/rename steps for live data before switching traffic.
 
 ## Directory Structure
 
@@ -60,7 +68,7 @@ k8s/
 │   ├── secrets.yaml         # Sensitive data (CHANGE BEFORE USE!)
 │   ├── storage.yaml         # PersistentVolumeClaims
 │   ├── postgres.yaml        # PostgreSQL HA StatefulSet
-│   ├── deployment.yaml      # NesVentory Deployment & Service
+│   ├── deployment.yaml      # Nestarr Deployment & Service
 │   ├── hpa.yaml             # HorizontalPodAutoscaler
 │   ├── ingress.yaml         # Ingress configuration
 │   ├── network-policy.yaml  # Network policies
@@ -123,7 +131,7 @@ spec:
 kubectl apply -k k8s/overlays/development
 
 # Watch deployment progress
-kubectl -n nesventory get pods -w
+kubectl -n nestarr get pods -w
 ```
 
 #### Production Environment
@@ -133,7 +141,7 @@ kubectl -n nesventory get pods -w
 kubectl apply -k k8s/overlays/production
 
 # Watch deployment progress
-kubectl -n nesventory get pods -w
+kubectl -n nestarr get pods -w
 ```
 
 #### AWS EKS Environment
@@ -158,23 +166,23 @@ After deploying the infrastructure with Terraform:
    kubectl apply -k k8s/overlays/aws
    
    # Watch deployment progress
-   kubectl -n nesventory get pods -w
+   kubectl -n nestarr get pods -w
    ```
 
 ### 4. Verify Deployment
 
 ```bash
 # Check all resources
-kubectl -n nesventory get all
+kubectl -n nestarr get all
 
 # Check pods are running
-kubectl -n nesventory get pods
+kubectl -n nestarr get pods
 
 # Check HPA status
-kubectl -n nesventory get hpa
+kubectl -n nestarr get hpa
 
 # View logs
-kubectl -n nesventory logs -l app=nesventory -f
+kubectl -n nestarr logs -l app=nestarr -f
 ```
 
 ## Configuration
@@ -219,8 +227,8 @@ Uncomment and set `storageClassName` in `storage.yaml` if your cluster requires 
 ### Scaling Manually
 
 ```bash
-# Scale NesVentory deployment
-kubectl -n nesventory scale deployment nesventory --replicas=5
+# Scale Nestarr deployment
+kubectl -n nestarr scale deployment nestarr --replicas=5
 
 # Note: HPA will override manual scaling based on metrics
 ```
@@ -229,35 +237,35 @@ kubectl -n nesventory scale deployment nesventory --replicas=5
 
 ```bash
 # Connect to PostgreSQL
-kubectl -n nesventory exec -it postgres-ha-0 -- psql -U nesventory -d nesventory
+kubectl -n nestarr exec -it postgres-ha-0 -- psql -U nestarr -d nestarr
 ```
 
 ### Backup Database
 
 ```bash
 # Create a backup
-kubectl -n nesventory exec postgres-ha-0 -- pg_dump -U nesventory nesventory > backup.sql
+kubectl -n nestarr exec postgres-ha-0 -- pg_dump -U nestarr nestarr > backup.sql
 ```
 
 ### View Logs
 
 ```bash
 # Application logs
-kubectl -n nesventory logs -l app=nesventory -f
+kubectl -n nestarr logs -l app=nestarr -f
 
 # PostgreSQL logs
-kubectl -n nesventory logs -l app=postgres-ha -f
+kubectl -n nestarr logs -l app=postgres-ha -f
 ```
 
 ### Upgrade Application
 
 ```bash
 # Update image and rollout
-kubectl -n nesventory set image deployment/nesventory \
-  nesventory=ghcr.io/tokendad/nesventory:v4.3.0
+kubectl -n nestarr set image deployment/nestarr \
+  nestarr=ghcr.io/tokendad/nestarr:v4.3.0
 
 # Monitor rollout
-kubectl -n nesventory rollout status deployment/nesventory
+kubectl -n nestarr rollout status deployment/nestarr
 ```
 
 ## Troubleshooting
@@ -266,30 +274,30 @@ kubectl -n nesventory rollout status deployment/nesventory
 
 ```bash
 # Check pod events
-kubectl -n nesventory describe pod <pod-name>
+kubectl -n nestarr describe pod <pod-name>
 
 # Check pod logs
-kubectl -n nesventory logs <pod-name>
+kubectl -n nestarr logs <pod-name>
 ```
 
 ### Database Connection Issues
 
 ```bash
 # Verify PostgreSQL is running
-kubectl -n nesventory get pods -l app=postgres-ha
+kubectl -n nestarr get pods -l app=postgres-ha
 
 # Check PostgreSQL logs
-kubectl -n nesventory logs postgres-ha-0
+kubectl -n nestarr logs postgres-ha-0
 
 # Test database connectivity from app pod
-kubectl -n nesventory exec -it <nesventory-pod> -- nc -zv postgres-ha 5432
+kubectl -n nestarr exec -it <nestarr-pod> -- nc -zv postgres-ha 5432
 ```
 
 ### HPA Not Scaling
 
 ```bash
 # Check HPA status
-kubectl -n nesventory describe hpa nesventory-hpa
+kubectl -n nestarr describe hpa nestarr-hpa
 
 # Verify metrics-server is running
 kubectl -n kube-system get pods -l k8s-app=metrics-server
@@ -316,5 +324,5 @@ If migrating from a SQLite-based deployment:
 ## Support
 
 For issues with:
-- **Application**: Check [NesVentory GitHub Issues](https://github.com/tokendad/NesVentory/issues)
+- **Application**: Check [Nestarr GitHub Issues](https://github.com/tokendad/Nestarr/issues)
 - **Kubernetes**: Refer to [Kubernetes documentation](https://kubernetes.io/docs/)

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides technical details for developers integrating with NesVentory's Living Items feature (v6.15.0+).
+This document provides technical details for developers integrating with Nestarr's Living Items feature (v6.15.0+).
 
 ## Data Model
 
@@ -437,7 +437,7 @@ All Living Items endpoints require authentication:
 
 ## Rate Limiting
 
-Standard NesVentory rate limits apply:
+Standard Nestarr rate limits apply:
 - 100 requests per minute per IP
 - 500 requests per hour per user
 
@@ -474,8 +474,8 @@ def test_create_person(client, auth_headers):
 
 ## Support
 
-- GitHub Issues: https://github.com/tokendad/NesVentory/issues
-- Mobile App: https://github.com/tokendad/NesventoryApp/issues
+- GitHub Issues: https://github.com/tokendad/Nestarr/issues
+- Mobile App: https://github.com/tokendad/Android-Nestarr/issues
 
 ---
 

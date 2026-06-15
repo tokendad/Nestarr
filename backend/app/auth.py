@@ -69,7 +69,7 @@ def get_user_by_email(db: Session, email: str) -> Optional[models.User]:
     Look up a user by their email address or short username.
     
     Supports login with:
-    - Full email address (e.g., "admin@nesventory.local")
+    - Full email address (e.g., "admin@nestarr.local")
     - Short username (e.g., "admin") - will match email starting with "username@"
     
     For short usernames, the lookup will find any user whose email starts with

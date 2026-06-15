@@ -1,5 +1,5 @@
 """
-Database seeding script for NesVentory.
+Database seeding script for Nestarr.
 Pre-populates the database with test users, locations, and items.
 """
 import uuid
@@ -83,7 +83,7 @@ def create_users(db: Session) -> list:
     users = [
         models.User(
             id=uuid.uuid4(),
-            email="admin@nesventory.local",
+            email="admin@nestarr.local",
             password_hash=get_password_hash("admin123"),
             full_name="Admin User",
             role=models.UserRole.ADMIN,
@@ -91,7 +91,7 @@ def create_users(db: Session) -> list:
         ),
         models.User(
             id=uuid.uuid4(),
-            email="editor@nesventory.local",
+            email="editor@nestarr.local",
             password_hash=get_password_hash("editor123"),
             full_name="Editor User",
             role=models.UserRole.EDITOR,
@@ -99,7 +99,7 @@ def create_users(db: Session) -> list:
         ),
         models.User(
             id=uuid.uuid4(),
-            email="viewer@nesventory.local",
+            email="viewer@nestarr.local",
             password_hash=get_password_hash("viewer123"),
             full_name="Viewer User",
             role=models.UserRole.VIEWER,

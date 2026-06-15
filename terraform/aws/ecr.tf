@@ -1,4 +1,4 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # ECR Repository for Container Images
 
 # ECR Repository

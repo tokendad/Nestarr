@@ -1,10 +1,10 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # Variable definitions
 
 variable "project_name" {
   description = "Name of the project, used for resource naming"
   type        = string
-  default     = "nesventory"
+  default     = "nestarr"
 }
 
 variable "aws_region" {
@@ -90,13 +90,13 @@ variable "db_max_allocated_storage" {
 variable "db_name" {
   description = "Name of the database"
   type        = string
-  default     = "nesventory"
+  default     = "nestarr"
 }
 
 variable "db_username" {
   description = "Database master username"
   type        = string
-  default     = "nesventory"
+  default     = "nestarr"
 }
 
 variable "db_password" {

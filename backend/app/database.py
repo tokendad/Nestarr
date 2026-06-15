@@ -6,22 +6,43 @@ from pathlib import Path
 
 # v2.0: Use SQLite for simplified deployment
 # Database file location:
-# - Docker: /app/data/nesventory.db (mount as volume for persistence)
-# - Local development: ./data/nesventory.db (relative to working directory)
+# - Docker: /app/data/nestarr.db (mount as volume for persistence)
+# - Local development: ./data/nestarr.db (relative to working directory)
+# If only the legacy nesventory.db file exists, keep using it for this release
+# so upgrades do not silently start with an empty database.
 
 def is_running_in_docker():
     """Detect if running inside a Docker container."""
     # Check for Docker-specific files/markers
     return Path("/.dockerenv").exists() or os.getenv("DOCKER_CONTAINER") == "true"
 
+def resolve_sqlite_db_path(default_path: str | Path, legacy_path: str | Path) -> Path:
+    """
+    Select the SQLite database path for the Nestarr rename.
+
+    Prefer the new Nestarr path. If the old NesVentory database exists and the
+    new one does not, continue using the legacy file rather than creating an
+    empty database during upgrade.
+    """
+    selected = Path(default_path).expanduser().resolve()
+    legacy = Path(legacy_path).expanduser().resolve()
+    if legacy.exists() and not selected.exists():
+        print(
+            f"Using legacy SQLite database path for compatibility: {legacy}. "
+            f"Set DB_PATH or migrate to {selected} when ready."
+        )
+        return legacy
+    return selected
+
+
 # Determine default DB path based on environment
 def get_default_db_path():
     """Get the default database path based on the environment."""
     # If running in Docker container, use /app/data
     if is_running_in_docker():
-        return "/app/data/nesventory.db"
+        return str(resolve_sqlite_db_path("/app/data/nestarr.db", "/app/data/nesventory.db"))
     # For local development, use ./data relative to working directory
-    return str(Path("./data/nesventory.db").resolve())
+    return str(resolve_sqlite_db_path("./data/nestarr.db", "./data/nesventory.db"))
 
 DB_PATH = os.getenv("DB_PATH", get_default_db_path())
 

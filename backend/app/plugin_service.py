@@ -18,6 +18,14 @@ from . import models
 
 logger = logging.getLogger(__name__)
 
+# Ordered list of image-identification endpoint paths to try.
+# The new path is attempted first; the legacy path is a compatibility fallback
+# for plugin images that have not yet been updated for the Nestarr rename.
+PLUGIN_IDENTIFY_ENDPOINTS = [
+    '/nestarr/identify/image',
+    '/nesventory/identify/image',
+]
+
 
 def _is_localhost_url(url: str) -> bool:
     """
@@ -120,14 +128,14 @@ def _log_plugin_error(plugin: models.Plugin, endpoint_path: str, error: Exceptio
     """
     if isinstance(error, httpx.HTTPStatusError):
         if error.response.status_code == 404:
-            if endpoint_path == '/nesventory/identify/image':
+            if endpoint_path in PLUGIN_IDENTIFY_ENDPOINTS:
                 logger.error(
                     f"\n{'='*80}\n"
                     f"PLUGIN ERROR: 404 Not Found for {endpoint_path}\n"
                     f"{'='*80}\n"
                     f"Plugin: {plugin.name}\n"
                     f"URL: {plugin.endpoint_url}{endpoint_path}\n\n"
-                    f"The /nesventory/identify/image endpoint was added in December 2025.\n"
+                    f"The image identification endpoint is missing from your plugin.\n"
                     f"Your plugin Docker image is OUTDATED.\n\n"
                     f"SOLUTION - Choose ONE of these options:\n\n"
                     f"1. Pull the latest Docker image (RECOMMENDED):\n"
@@ -250,24 +258,42 @@ async def detect_items_with_plugin(
         Detection result with items array, or None if detection failed
     """
     try:
-        # Prepare the files dict for multipart upload
         files = {
             'file': ('image', image_data, mime_type)
         }
-        
-        # Call the plugin endpoint
-        result = await call_plugin_endpoint(
-            plugin,
-            '/nesventory/identify/image',
-            files=files,
-            timeout=60.0  # Item detection might take longer
-        )
-        
-        logger.info(f"Successfully detected items using plugin: {plugin.name}")
-        return result
-        
+        # Try the new endpoint first; fall back to the legacy path for plugins not yet updated.
+        # Only advance to the legacy path on 404 (endpoint missing) — other errors are fatal
+        # for that attempt so we still fall through to the legacy path, giving the best chance
+        # of success during the rename transition.
+        for endpoint_path in PLUGIN_IDENTIFY_ENDPOINTS:
+            try:
+                result = await call_plugin_endpoint(
+                    plugin,
+                    endpoint_path,
+                    files=files,
+                    timeout=60.0,
+                )
+                logger.info(f"Successfully detected items using plugin: {plugin.name}")
+                return result
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 404:
+                    # Endpoint not found — try the next path in the list
+                    continue
+                _log_plugin_error(plugin, endpoint_path, e)
+                return None
+            except Exception as e:
+                # Network/timeout error on the new endpoint — still worth trying the legacy path
+                if endpoint_path == PLUGIN_IDENTIFY_ENDPOINTS[0]:
+                    logger.debug(
+                        f"Non-HTTP error on {endpoint_path} for plugin {plugin.name}, "
+                        f"falling back to legacy endpoint: {e}"
+                    )
+                    continue
+                _log_plugin_error(plugin, endpoint_path, e)
+                return None
+        return None
     except Exception as e:
-        _log_plugin_error(plugin, '/nesventory/identify/image', e)
+        _log_plugin_error(plugin, PLUGIN_IDENTIFY_ENDPOINTS[0], e)
         return None
 
 
@@ -341,23 +367,29 @@ async def test_plugin_connection(plugin: models.Plugin) -> Dict[str, Any]:
                 # Try to check for the image identification endpoint
                 warnings = []
                 try:
-                    # Test if the /nesventory/identify/image endpoint exists
-                    # We expect 422 (missing file parameter) if the endpoint exists
-                    # or 404 if the endpoint doesn't exist (outdated plugin)
-                    test_url = f"{base_url}/nesventory/identify/image"
-                    await client.post(test_url, headers=headers, timeout=5.0)
-                    # If we get here without exception, the endpoint exists and returned 200
-                    # (though 422 would be more typical for missing file)
-                except httpx.HTTPStatusError as e:
-                    if e.response.status_code == 404:
-                        # Endpoint doesn't exist - plugin is outdated
+                    # Test if the image identification endpoint exists.
+                    # Try the new path first, then the legacy path for older plugin images.
+                    # We expect 422 (missing file parameter) if the endpoint exists,
+                    # or 404 if it doesn't (outdated plugin).
+                    endpoint_found = False
+                    for test_path in PLUGIN_IDENTIFY_ENDPOINTS:
+                        try:
+                            test_url = f"{base_url}{test_path}"
+                            await client.post(test_url, headers=headers, timeout=5.0)
+                            endpoint_found = True
+                            break
+                        except httpx.HTTPStatusError as e:
+                            if e.response.status_code != 404:
+                                endpoint_found = True  # 422 etc. means the endpoint exists
+                                break
+                        except Exception:
+                            break
+                    if not endpoint_found:
                         warnings.append(
                             "WARNING: Plugin appears to be outdated. "
-                            "The /nesventory/identify/image endpoint is missing. "
-                            "Please update to the latest version (December 2025 or later)."
+                            "The image identification endpoint (/nestarr/identify/image) is missing. "
+                            "Please update to the latest plugin version."
                         )
-                    # Status codes like 422 (missing file) mean the endpoint exists - that's good!
-                    # We only warn on 404 (endpoint not found)
                 except Exception:
                     # Network errors or timeouts during test - don't fail the main health check
                     pass

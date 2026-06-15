@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useIsMobile } from "../lib/useMobile";
+import { APP_NAME } from "../lib/constants";
 
 interface LayoutProps {
   sidebar: React.ReactNode;
@@ -53,7 +54,7 @@ const Layout: React.FC<LayoutProps> = ({
               </span>
             </button>
           )}
-          <img src="/logo.png" alt="NesVentory" className="app-logo" />
+          <img src="/logo.png" alt={APP_NAME} className="app-logo" />
           {onSearchChange && (
             <div className="header-search">
               <input

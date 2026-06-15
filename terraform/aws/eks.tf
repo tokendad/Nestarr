@@ -1,4 +1,4 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # EKS Cluster Configuration
 
 # EKS Cluster

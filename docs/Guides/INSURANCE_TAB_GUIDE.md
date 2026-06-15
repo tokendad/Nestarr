@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Insurance Tab is a comprehensive feature added to NesVentory that allows you to manage insurance documentation for your primary locations (homes). This feature was introduced in PR #419 and is available in version 6.3.0 and later.
+The Insurance Tab is a comprehensive feature added to Nestarr that allows you to manage insurance documentation for your primary locations (homes). This feature was introduced in PR #419 and is available in version 6.3.0 and later.
 
 ## How to Access the Insurance Tab
 
@@ -12,7 +12,7 @@ The Insurance Tab is a comprehensive feature added to NesVentory that allows you
 
 ### Step-by-Step Instructions
 
-1. **Navigate to the Locations page** in NesVentory
+1. **Navigate to the Locations page** in Nestarr
 
 2. **Identify or Create a Primary Location:**
    - Look for location cards with a "HOME" badge - these are primary locations

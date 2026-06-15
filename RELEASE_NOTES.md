@@ -1,6 +1,6 @@
-# NesVentory v7.2.0
+# Nestarr v7.2.0
 
-Release tag: https://github.com/tokendad/NesVentory/releases/tag/v7.2.0
+Release tag: https://github.com/tokendad/Nestarr/releases/tag/v7.2.0
 
 ## Summary
 Automated Nightly Release

@@ -1,6 +1,6 @@
-# NesVentory AWS Terraform Deployment
+# Nestarr AWS Terraform Deployment
 
-This directory contains Terraform configurations for deploying NesVentory to AWS with:
+This directory contains Terraform configurations for deploying Nestarr to AWS with:
 - Amazon EKS (Elastic Kubernetes Service) for container orchestration
 - Amazon RDS (PostgreSQL) for database
 - Amazon S3 for media storage
@@ -25,7 +25,7 @@ This directory contains Terraform configurations for deploying NesVentory to AWS
 │  │  │  │  Application Load   │    │  │  │    EKS Node Group       │   │ ││
 │  │  │  │  Balancer (ALB)     │────┼──┼─▶│                         │   │ ││
 │  │  │  │                     │    │  │  │  ┌─────────────────┐    │   │ ││
-│  │  │  └─────────────────────┘    │  │  │  │ NesVentory Pods │    │   │ ││
+│  │  │  └─────────────────────┘    │  │  │  │ Nestarr Pods │    │   │ ││
 │  │  │                             │  │  │  └─────────────────┘    │   │ ││
 │  │  │  ┌─────────────────────┐    │  │  │                         │   │ ││
 │  │  │  │     NAT Gateway     │    │  │  └─────────────────────────┘   │ ││
@@ -55,6 +55,21 @@ This directory contains Terraform configurations for deploying NesVentory to AWS
 4. **kubectl** for managing the Kubernetes cluster
 5. **Docker** for building and pushing container images
 
+## Rename Upgrade Caution
+
+Defaults now use the `nestarr` project, database, Kubernetes service account,
+and IAM output names. For existing NesVentory Terraform state, do not apply the
+rename blindly. Review `terraform plan` and move renamed IAM resources first:
+
+```bash
+terraform state mv aws_iam_role.nesventory_s3 aws_iam_role.nestarr_s3
+terraform state mv aws_iam_policy.nesventory_s3 aws_iam_policy.nestarr_s3
+terraform state mv aws_iam_role_policy_attachment.nesventory_s3 aws_iam_role_policy_attachment.nestarr_s3
+```
+
+Remote state bucket/table names in `main.tf` are examples. Rename or migrate
+actual state storage only after taking a backup and updating backend config.
+
 ## Quick Start
 
 ### 1. Configure Variables
@@ -66,7 +81,7 @@ cp terraform.tfvars.example terraform.tfvars
 ```
 
 Edit `terraform.tfvars` with your settings:
-- `project_name`: Name for the deployment (default: "nesventory")
+- `project_name`: Name for the deployment (default: "nestarr")
 - `aws_region`: AWS region to deploy to
 - `environment`: Environment name (development, staging, production)
 - `db_password`: Strong password for the database
@@ -94,7 +109,7 @@ terraform apply
 After the deployment, configure kubectl to access the cluster:
 
 ```bash
-aws eks update-kubeconfig --name nesventory-cluster --region <your-region>
+aws eks update-kubeconfig --name nestarr-cluster --region <your-region>
 ```
 
 ### 6. Configure and Deploy the Application
@@ -168,7 +183,7 @@ kubectl apply -k ../k8s/overlays/aws
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `project_name` | Name for the project | `nesventory` |
+| `project_name` | Name for the project | `nestarr` |
 | `aws_region` | AWS region | `us-east-1` |
 | `environment` | Environment name | `production` |
 | `vpc_cidr` | VPC CIDR block | `10.0.0.0/16` |
@@ -225,7 +240,7 @@ terraform destroy
 
 ### EKS Cluster Not Ready
 ```bash
-aws eks describe-cluster --name nesventory-cluster --region <region>
+aws eks describe-cluster --name nestarr-cluster --region <region>
 ```
 
 ### Node Group Issues

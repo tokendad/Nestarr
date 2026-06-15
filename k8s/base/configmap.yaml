@@ -1,22 +1,22 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nesventory-config
-  namespace: nesventory
+  name: nestarr-config
+  namespace: nestarr
   labels:
-    app.kubernetes.io/name: nesventory
+    app.kubernetes.io/name: nestarr
     app.kubernetes.io/component: config
 data:
   # Application settings
-  PROJECT_NAME: "NesVentory"
+  PROJECT_NAME: "Nestarr"
   APP_PORT: "8181"
   TZ: "Etc/UTC"
 
   # Database connection settings (PostgreSQL HA)
   DB_HOST: "postgres-ha"
   DB_PORT: "5432"
-  DB_NAME: "nesventory"
-  DB_USER: "nesventory"
+  DB_NAME: "nestarr"
+  DB_USER: "nestarr"
 
   # JWT settings
   JWT_ALGORITHM: "HS256"

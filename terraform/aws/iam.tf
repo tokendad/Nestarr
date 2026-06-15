@@ -1,4 +1,4 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # IAM Roles and Policies
 
 # EKS Cluster Role
@@ -103,8 +103,13 @@ resource "aws_iam_role_policy_attachment" "ebs_csi_driver" {
   role       = aws_iam_role.ebs_csi_driver.name
 }
 
-# S3 Access Role for NesVentory pods (IRSA)
-resource "aws_iam_role" "nesventory_s3" {
+# S3 Access Role for Nestarr pods (IRSA)
+# Terraform state caution: if this stack was previously applied with the old
+# NesVentory resource addresses, move state before applying the rename:
+#   terraform state mv aws_iam_role.nesventory_s3 aws_iam_role.nestarr_s3
+#   terraform state mv aws_iam_policy.nesventory_s3 aws_iam_policy.nestarr_s3
+#   terraform state mv aws_iam_role_policy_attachment.nesventory_s3 aws_iam_role_policy_attachment.nestarr_s3
+resource "aws_iam_role" "nestarr_s3" {
   name = "${var.project_name}-s3-access-role"
 
   assume_role_policy = jsonencode({
@@ -118,7 +123,7 @@ resource "aws_iam_role" "nesventory_s3" {
         }
         Condition = {
           StringEquals = {
-            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:nesventory:nesventory"
+            "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub" = "system:serviceaccount:nestarr:nestarr"
             "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:aud" = "sts.amazonaws.com"
           }
         }
@@ -131,9 +136,9 @@ resource "aws_iam_role" "nesventory_s3" {
   }
 }
 
-resource "aws_iam_policy" "nesventory_s3" {
+resource "aws_iam_policy" "nestarr_s3" {
   name        = "${var.project_name}-s3-access-policy"
-  description = "Policy for NesVentory to access S3 bucket"
+  description = "Policy for Nestarr to access S3 bucket"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -155,7 +160,7 @@ resource "aws_iam_policy" "nesventory_s3" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "nesventory_s3" {
-  policy_arn = aws_iam_policy.nesventory_s3.arn
-  role       = aws_iam_role.nesventory_s3.name
+resource "aws_iam_role_policy_attachment" "nestarr_s3" {
+  policy_arn = aws_iam_policy.nestarr_s3.arn
+  role       = aws_iam_role.nestarr_s3.name
 }

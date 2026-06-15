@@ -1,6 +1,6 @@
 # Docker Compose Environment Variables
 
-Complete reference for all environment variables supported by NesVentory.
+Complete reference for all environment variables supported by Nestarr.
 
 ## Required Variables
 
@@ -25,7 +25,9 @@ These variables **must** be set for the application to function properly.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DB_PATH` | `/app/data/nesventory.db` | Path to SQLite database file. |
+| `DB_PATH` | `/app/data/nestarr.db` | Path to SQLite database file. |
+
+> Existing installations may still have `/app/data/nesventory.db`. Treat that file as a legacy data path during the rename window and migrate or keep it deliberately instead of deleting it.
 
 ## Authentication Settings
 
@@ -88,7 +90,7 @@ These settings control security when uploading documents/manuals from external U
 
 ## System Printer (CUPS)
 
-NesVentory supports printing labels to system printers via CUPS. This requires mounting the CUPS socket from the host.
+Nestarr supports printing labels to system printers via CUPS. This requires mounting the CUPS socket from the host.
 
 | Requirement | Description |
 |-------------|-------------|
@@ -103,11 +105,13 @@ For hardware features like Bluetooth printing, you may need to add Linux capabil
 
 ```yaml
 services:
-  nesventory:
-    image: neuman1812/nesventory:latest
+  nestarr:
+    image: neuman1812/nestarr:latest
     cap_add:
       - NET_ADMIN    # Required for Bluetooth printer support
 ```
+
+The previous Docker image name, `neuman1812/nesventory`, is retained as a compatibility alias for the rename transition. New deployments should use `neuman1812/nestarr`.
 
 ### Available Capabilities
 
@@ -119,7 +123,7 @@ Alternatively, for full hardware access (development/testing only):
 
 ```yaml
 services:
-  nesventory:
+  nestarr:
     privileged: true
 ```
 
@@ -137,9 +141,9 @@ services:
 
 ```yaml
 services:
-  nesventory:
-    image: neuman1812/nesventory:latest
-    container_name: nesventory
+  nestarr:
+    image: neuman1812/nestarr:latest
+    container_name: nestarr
     restart: unless-stopped
     environment:
       # Required
@@ -175,7 +179,7 @@ services:
       # DOCUMENT_URL_ALLOWED_HOSTS: "github.com,dropbox.com"
 
     volumes:
-      - ./nesventory_data:/app/data
+      - ./nestarr_data:/app/data
       - /etc/localtime:/etc/localtime:ro
       # Uncomment for system printer (CUPS) support:
       # - /var/run/cups/cups.sock:/var/run/cups/cups.sock

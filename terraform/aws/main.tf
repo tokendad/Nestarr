@@ -1,4 +1,4 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # Main Terraform configuration
 
 terraform {
@@ -17,11 +17,11 @@ terraform {
 
   # Uncomment to use remote state storage
   # backend "s3" {
-  #   bucket         = "nesventory-terraform-state"
+  #   bucket         = "nestarr-terraform-state"
   #   key            = "terraform.tfstate"
   #   region         = "us-east-1"
   #   encrypt        = true
-  #   dynamodb_table = "nesventory-terraform-locks"
+  #   dynamodb_table = "nestarr-terraform-locks"
   # }
 }
 
@@ -47,7 +47,7 @@ data "aws_caller_identity" "current" {}
 # Local values
 locals {
   cluster_name = "${var.project_name}-cluster"
-  
+
   # Use first 2 availability zones
   azs = slice(data.aws_availability_zones.available.names, 0, 2)
 }

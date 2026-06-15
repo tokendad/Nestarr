@@ -1,10 +1,10 @@
 ================================================================================
-NesVentory Installation Guide
+Nestarr Installation Guide
 ================================================================================
 
 Version: 6.0.0
 
-This guide provides detailed instructions for installing and running NesVentory
+This guide provides detailed instructions for installing and running Nestarr
 using Docker Compose or Docker CLI commands.
 
 ================================================================================
@@ -25,7 +25,7 @@ TABLE OF CONTENTS
 1. PREREQUISITES
 ================================================================================
 
-Before installing NesVentory, ensure you have the following installed:
+Before installing Nestarr, ensure you have the following installed:
 
 - Docker (version 20.10 or higher)
 - Docker Compose (version 2.0 or higher)
@@ -50,8 +50,8 @@ and backend services automatically.
 
 Step 1: Clone the Repository
 -----------------------------
-git clone https://github.com/tokendad/NesVentory.git
-cd NesVentory
+git clone https://github.com/tokendad/Nestarr.git
+cd Nestarr
 
 Step 2: Configure docker-compose.yml
 -------------------------------------
@@ -61,9 +61,13 @@ Edit this file and configure your settings:
 IMPORTANT: Update the following in docker-compose.yml:
   - SECRET_KEY - Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
   - JWT_SECRET_KEY - Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
-  - Volume path: ./nesventory-data (default, or change to your desired location)
+  - Volume path: ./nestarr-data (default, or change to your desired location)
   - PUID/PGID: Set to match your user (find with: id -u && id -g)
   - TZ: Set to your timezone
+
+UPGRADE NOTE: If you are upgrading an existing NesVentory install, keep your
+existing data bind mount or copy it to the new Nestarr path only after taking a
+backup. PUID/PGID should remain the same so existing files stay writable.
 
 Alternatively, copy the example environment file:
   cp .env.example .env
@@ -103,22 +107,22 @@ these steps:
 
 Step 1: Create Docker Network
 ------------------------------
-docker network create nesventory_net
+docker network create nestarr_net
 
 Step 2: Create Database Volume
 -------------------------------
-docker volume create nesventory_db_data
+docker volume create nestarr_db_data
 
 Step 3: Start PostgreSQL Database
 ----------------------------------
 docker run -d \
-  --name nesventory_db \
-  --network nesventory_net \
-  -e POSTGRES_DB=nesventory \
-  -e POSTGRES_USER=nesventory \
+  --name nestarr_db \
+  --network nestarr_net \
+  -e POSTGRES_DB=nestarr \
+  -e POSTGRES_USER=nestarr \
   -e POSTGRES_PASSWORD=your-secure-password \
   -e TZ=Etc/UTC \
-  -v nesventory_db_data:/var/lib/postgresql/data \
+  -v nestarr_db_data:/var/lib/postgresql/data \
   --restart unless-stopped \
   postgres:16
 
@@ -129,19 +133,19 @@ Optional Volume Mount:
 Step 4: Build Backend Image
 ----------------------------
 cd backend
-docker build -t nesventory-backend .
+docker build -t nestarr-backend .
 cd ..
 
 Step 5: Start Backend Service
 ------------------------------
 docker run -d \
-  --name nesventory_backend \
-  --network nesventory_net \
-  -e DB_HOST=nesventory_db \
+  --name nestarr_backend \
+  --network nestarr_net \
+  -e DB_HOST=nestarr_db \
   -e DB_PORT=5432 \
-  -e DB_USER=nesventory \
+  -e DB_USER=nestarr \
   -e DB_PASSWORD=your-secure-password \
-  -e DB_NAME=nesventory \
+  -e DB_NAME=nestarr \
   -e SECRET_KEY=your-super-secret-key \
   -e JWT_SECRET_KEY=your-jwt-secret-key \
   -e CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173 \
@@ -152,17 +156,17 @@ docker run -d \
   -v $(pwd)/backend:/app \
   -p 8181:8181 \
   --restart unless-stopped \
-  nesventory-backend
+  nestarr-backend
 
 Optional Volume Mounts:
   Add these to the docker run command above for additional functionality:
-  
-  -v /data/DockerConfigs/nesventory:/config \
+
+  -v /data/DockerConfigs/nestarr:/config \
     (Persistent configuration and backups)
-  
+
   -v /media:/media \
     (Media files and images)
-  
+
   -v /etc/localtime:/etc/localtime:ro \
     (Sync with host timezone)
 
@@ -183,10 +187,10 @@ Required Security Settings:
   DB_PASSWORD                   - Database password
 
 Database Settings:
-  DB_HOST                       - Database host (default: nesventory_db)
+  DB_HOST                       - Database host (default: nestarr_db)
   DB_PORT                       - Database port (default: 5432)
-  DB_USER                       - Database user (default: nesventory)
-  DB_NAME                       - Database name (default: nesventory)
+  DB_USER                       - Database user (default: nestarr)
+  DB_NAME                       - Database name (default: nestarr)
   POSTGRES_DB                   - PostgreSQL database name (for db container)
   POSTGRES_USER                 - PostgreSQL user name (for db container)
   POSTGRES_PASSWORD             - PostgreSQL password (for db container)
@@ -195,21 +199,21 @@ Docker User Configuration (Optional):
   PUID                          - User ID for container process (default: 1000)
                                   Controls file ownership for created files
                                   Find your user ID with: id -u
-  
+
   PGID                          - Group ID for container process (default: 1000)
                                   Controls group ownership for created files
                                   Find your group ID with: id -g
-  
+
   UMASK                         - File creation permission mask (default: 002)
                                   002 = Files: 664 (rw-rw-r--), Dirs: 775 (rwxrwxr-x)
                                   022 = Files: 644 (rw-r--r--), Dirs: 755 (rwxr-xr-x)
-  
+
   TZ                            - Timezone for container (default: Etc/UTC)
                                   Use IANA timezone names (e.g., America/New_York)
                                   List: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 
 Application Settings:
-  PROJECT_NAME                  - Project name (default: NesVentory)
+  PROJECT_NAME                  - Project name (default: Nestarr)
   BACKEND_PORT                  - Backend port (default: 8181)
   FRONTEND_PORT                 - Frontend port (default: 5173)
   ACCESS_TOKEN_EXPIRE_MINUTES   - JWT expiration (default: 30)
@@ -222,10 +226,10 @@ Docker Volume Configuration:
   the SQLite database and uploaded media files:
 
   Data Volume:
-    - /path/to/nesventory_data:/app/data
+    - /path/to/nestarr_data:/app/data
       Stores the SQLite database file and uploaded media files in a
       subdirectory (/app/data/media/photos)
-  
+
   Timezone Sync:
     - /etc/localtime:/etc/localtime:ro
       Synchronizes container timezone with host system
@@ -252,17 +256,17 @@ Once all services are running, you can access:
 The application automatically seeds the database with three test users:
 
   Admin User:
-    Email:    admin@nesventory.local
+    Email:    admin@nestarr.local
     Password: admin123
     Access:   Full administrative access
 
   Editor User:
-    Email:    editor@nesventory.local
+    Email:    editor@nestarr.local
     Password: editor123
     Access:   Can create and modify items
 
   Viewer User:
-    Email:    viewer@nesventory.local
+    Email:    viewer@nestarr.local
     Password: viewer123
     Access:   Read-only access
 
@@ -277,20 +281,20 @@ To verify the installation is successful:
 
 1. Check Docker Containers are Running:
    docker compose ps
-   
+
    Expected output should show:
-   - nesventory_db (running)
-   - nesventory_backend (running)
+   - nestarr_db (running)
+   - nestarr_backend (running)
 
 2. Check Backend Health:
    curl http://localhost:8181/api/health
-   
+
    Expected response: {"status":"healthy"}
 
 3. Check Backend Version:
    curl http://localhost:8181/api/version
-   
-   Expected response: {"name":"NesVentory","version":"6.0.0"}
+
+   Expected response: {"name":"Nestarr","version":"6.0.0"}
 
 4. Check Frontend:
    Open http://localhost:5173 in your browser
@@ -298,13 +302,13 @@ To verify the installation is successful:
 
 5. Test Login:
    Use the admin credentials to log in:
-   Email: admin@nesventory.local
+   Email: admin@nestarr.local
    Password: admin123
 
 6. Check Database Seeding:
    curl http://localhost:8181/api/items
    (Requires authentication token)
-   
+
    Should return the 8 pre-seeded test items
 
 ================================================================================
@@ -315,15 +319,16 @@ Database Connection Issues:
 ---------------------------
 If the backend cannot connect to the database:
   - Verify the database container is running: docker compose ps
-  - Check database logs: docker compose logs nesventory_db
+  - Check database logs: docker compose logs nestarr_db
   - Verify DB_PASSWORD matches in both services
 
 Database Schema Errors:
 -----------------------
 If you see foreign key or type mismatch errors:
   1. Stop containers: docker compose down
-  2. Remove database volume: docker volume rm nesventory_nesventory_db_data
-  3. Restart: docker compose up --build
+  2. Back up your database volume or bind mount before making changes
+  3. Remove the database volume only for disposable test installs: docker volume rm nestarr_nestarr_db_data
+  4. Restart: docker compose up --build
 
 Port Already in Use:
 --------------------
@@ -340,8 +345,8 @@ Frontend Cannot Connect to Backend:
 
 View Container Logs:
 --------------------
-  docker compose logs -f nesventory_backend
-  docker compose logs -f nesventory_db
+  docker compose logs -f nestarr_backend
+  docker compose logs -f nestarr_db
 
 Rebuild from Scratch:
 ---------------------
@@ -358,21 +363,23 @@ Stop services (keeps data):
   docker compose down
 
 Stop services and remove volumes (deletes all data):
+  WARNING: This deletes application data. Back up first.
   docker compose down -v
 
 Using Docker CLI:
 -----------------
 Stop containers:
-  docker stop nesventory_backend nesventory_db
+  docker stop nestarr_backend nestarr_db
 
 Remove containers:
-  docker rm nesventory_backend nesventory_db
+  docker rm nestarr_backend nestarr_db
 
 Remove network:
-  docker network rm nesventory_net
+  docker network rm nestarr_net
 
 Remove volume (deletes all data):
-  docker volume rm nesventory_db_data
+  WARNING: This deletes application data. Back up first.
+  docker volume rm nestarr_db_data
 
 Stop Frontend:
 --------------
@@ -385,9 +392,9 @@ ADDITIONAL RESOURCES
 - Project README: README.md
 - Database Seeding Documentation: SEEDING.md
 - API Documentation: http://localhost:8181/docs (when running)
-- GitHub Repository: https://github.com/tokendad/NesVentory
+- GitHub Repository: https://github.com/tokendad/Nestarr
 
 For issues and support, please visit:
-https://github.com/tokendad/NesVentory/issues
+https://github.com/tokendad/Nestarr/issues
 
 ================================================================================

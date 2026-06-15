@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nesventory
-  namespace: nesventory
+  name: nestarr
+  namespace: nestarr
   labels:
-    app.kubernetes.io/name: nesventory
+    app.kubernetes.io/name: nestarr
     app.kubernetes.io/component: application
 spec:
   replicas: 2  # Initial replicas, managed by HPA
   selector:
     matchLabels:
-      app: nesventory
+      app: nestarr
   template:
     metadata:
       labels:
-        app: nesventory
-        app.kubernetes.io/name: nesventory
+        app: nestarr
+        app.kubernetes.io/name: nestarr
         app.kubernetes.io/component: application
     spec:
       securityContext:
@@ -34,15 +34,15 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
       containers:
-        - name: nesventory
-          image: ghcr.io/tokendad/nesventory:latest
+        - name: nestarr
+          image: ghcr.io/tokendad/nestarr:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8181
               name: http
           envFrom:
             - configMapRef:
-                name: nesventory-config
+                name: nestarr-config
           env:
             # Database connection with PostgreSQL
             - name: DATABASE_URL
@@ -50,34 +50,34 @@ spec:
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: DB_PASSWORD
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: SECRET_KEY
             - name: JWT_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: JWT_SECRET_KEY
             - name: GEMINI_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: GEMINI_API_KEY
                   optional: true
             - name: GOOGLE_CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: GOOGLE_CLIENT_ID
                   optional: true
             - name: GOOGLE_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: GOOGLE_CLIENT_SECRET
                   optional: true
             # Override for Kubernetes - don't use SQLite
@@ -87,37 +87,37 @@ spec:
             - name: S3_BUCKET_NAME
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: S3_BUCKET_NAME
                   optional: true
             - name: S3_REGION
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: S3_REGION
                   optional: true
             - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: S3_ACCESS_KEY_ID
                   optional: true
             - name: S3_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: S3_SECRET_ACCESS_KEY
                   optional: true
             - name: S3_ENDPOINT_URL
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: S3_ENDPOINT_URL
                   optional: true
             - name: S3_PUBLIC_URL
               valueFrom:
                 secretKeyRef:
-                  name: nesventory-secrets
+                  name: nestarr-secrets
                   key: S3_PUBLIC_URL
                   optional: true
           volumeMounts:
@@ -155,15 +155,15 @@ spec:
       volumes:
         - name: media-storage
           persistentVolumeClaim:
-            claimName: nesventory-media-pvc
+            claimName: nestarr-media-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: nesventory
-  namespace: nesventory
+  name: nestarr
+  namespace: nestarr
   labels:
-    app.kubernetes.io/name: nesventory
+    app.kubernetes.io/name: nestarr
     app.kubernetes.io/component: application
 spec:
   type: ClusterIP
@@ -173,4 +173,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: nesventory
+    app: nestarr

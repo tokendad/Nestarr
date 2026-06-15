@@ -1,5 +1,5 @@
 {
-  "name": "nesventory-frontend",
+  "name": "nestarr-frontend",
   "private": true,
   "scripts": {
     "dev": "vite",

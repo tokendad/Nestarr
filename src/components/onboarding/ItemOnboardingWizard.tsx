@@ -114,8 +114,8 @@ export default function ItemOnboardingWizard({ onAddItem, onSkip }: Props) {
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <Tip icon="☀️" text="Good lighting makes a huge difference — natural light from a window works best." />
                 <Tip icon="🏷️" text="Include the label or model number in one photo so you can zoom in later." />
-                <Tip icon="🧾" text="Snap the receipt or warranty card if you have it — NesVentory stores documents too." />
-                <Tip icon="🤖" text="NesVentory's AI can detect items from photos and pre-fill many fields for you." />
+                <Tip icon="🧾" text="Snap the receipt or warranty card if you have it — Nestarr stores documents too." />
+                <Tip icon="🤖" text="Nestarr's AI can detect items from photos and pre-fill many fields for you." />
               </div>
             </div>
             <div className="wizard-footer">
@@ -168,7 +168,7 @@ export default function ItemOnboardingWizard({ onAddItem, onSkip }: Props) {
               <h2>You're All Set!</h2>
               <p>
                 Click the button below to open the Add Item form and add your first item
-                to NesVentory. You can always come back and add more later.
+                to Nestarr. You can always come back and add more later.
               </p>
             </div>
             <div className="wizard-body">

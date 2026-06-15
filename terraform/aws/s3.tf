@@ -1,4 +1,4 @@
-# NesVentory AWS Infrastructure
+# Nestarr AWS Infrastructure
 # S3 Bucket for Media Storage
 
 # S3 Bucket
@@ -83,7 +83,7 @@ resource "aws_s3_bucket_cors_configuration" "media" {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
     # Configurable allowed origins - restrict to specific domains in production
-    # Example for production: ["https://nesventory.example.com"]
+    # Example for production: ["https://nestarr.example.com"]
     allowed_origins = var.s3_cors_allowed_origins
     expose_headers  = ["ETag"]
     max_age_seconds = 3600

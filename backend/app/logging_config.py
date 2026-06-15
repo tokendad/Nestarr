@@ -1,5 +1,5 @@
 """
-Logging configuration for NesVentory.
+Logging configuration for Nestarr.
 
 This module provides:
 - Three log levels: INFO (default), DEBUG, TRACE
@@ -47,7 +47,9 @@ user_id_var: ContextVar[str] = ContextVar("user_id", default="-")
 # =============================================================================
 LOG_DIR = Path("/app/data/logs")
 LOG_SETTINGS_FILE = LOG_DIR / "log_settings.json"
-CURRENT_LOG_FILE = LOG_DIR / "nesventory.log"
+CURRENT_LOG_FILE = LOG_DIR / "nestarr.log"
+LEGACY_LOG_FILE_PREFIX = "nesventory.log"
+LOG_FILE_PREFIX = "nestarr.log"
 MIN_LOG_FILE_SIZE_FOR_ROTATION = 10  # bytes
 
 # Third-party loggers to configure
@@ -172,7 +174,7 @@ def rotate_current_log() -> Optional[str]:
         return None
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    rotated_name = f"nesventory.log.{timestamp}"
+    rotated_name = f"{LOG_FILE_PREFIX}.{timestamp}"
     rotated_path = LOG_DIR / rotated_name
 
     try:
@@ -228,15 +230,16 @@ def cleanup_old_logs() -> int:
     deleted_count = 0
 
     try:
-        for filepath in LOG_DIR.glob("nesventory.log.*"):
-            if filepath.is_file() and filepath.name != "log_settings.json":
-                try:
-                    mtime = datetime.fromtimestamp(filepath.stat().st_mtime)
-                    if mtime < cutoff:
-                        filepath.unlink()
-                        deleted_count += 1
-                except OSError:
-                    pass
+        for pattern in (f"{LOG_FILE_PREFIX}.*", f"{LEGACY_LOG_FILE_PREFIX}.*"):
+            for filepath in LOG_DIR.glob(pattern):
+                if filepath.is_file() and filepath.name != "log_settings.json":
+                    try:
+                        mtime = datetime.fromtimestamp(filepath.stat().st_mtime)
+                        if mtime < cutoff:
+                            filepath.unlink()
+                            deleted_count += 1
+                    except OSError:
+                        pass
     except OSError:
         pass
 
@@ -343,7 +346,7 @@ def _recreate_file_handler():
 
 def setup_logging() -> None:
     """
-    Configure Python logging for NesVentory.
+    Configure Python logging for Nestarr.
 
     This function should be called on application startup. It:
     1. Runs initial cleanup (rotation and retention)
@@ -454,7 +457,7 @@ def log_startup_summary(host: str, port: int) -> None:
     from .config import settings as app_settings
     from .database import SQLALCHEMY_DATABASE_URL
 
-    logger = get_logger("nesventory.startup")
+    logger = get_logger("nestarr.startup")
     settings = load_log_settings()
 
     # Determine database info
@@ -476,7 +479,7 @@ def log_startup_summary(host: str, port: int) -> None:
 
     # Log the summary
     logger.info("=" * 60)
-    logger.info(f"NesVentory v{app_settings.VERSION} Starting")
+    logger.info(f"Nestarr v{app_settings.VERSION} Starting")
     logger.info("=" * 60)
     logger.info(f"Database: {db_type} at {db_path}")
     logger.info(f"Server: {host}:{port}")

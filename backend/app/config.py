@@ -16,7 +16,7 @@ def _get_version() -> str:
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "NesVentory"
+    PROJECT_NAME: str = "Nestarr"
     VERSION: str = _get_version()
 
     BACKEND_PORT: int = 8181
@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     # v2.0: Database fields are optional for SQLite (not used)
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
-    DB_USER: str = "nesventory"
+    DB_USER: str = "nestarr"
     DB_PASSWORD: str | None = None  # Optional for SQLite
-    DB_NAME: str = "nesventory"
+    DB_NAME: str = "nestarr"
 
     JWT_SECRET_KEY: str  # No default - must be set in environment
     JWT_ALGORITHM: str = "HS256"

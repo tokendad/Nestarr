@@ -221,10 +221,12 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onClose, onUpdate, em
     setApiKeyLoading(true);
     setError(null);
     try {
-      const updatedUser = await generateApiKey();
-      setCurrentApiKey(updatedUser.api_key || null);
+      const result = await generateApiKey();
+      // Only the api_key field changes — extract it for display only.
+      // Do not propagate the full response to onUpdate; the parent's stored
+      // user state (email, role, etc.) is unchanged by key generation.
+      setCurrentApiKey(result.api_key || null);
       setShowApiKey(true);
-      onUpdate(updatedUser);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to generate API key";
       setError(errorMessage);
@@ -240,10 +242,11 @@ const UserSettings: React.FC<UserSettingsProps> = ({ user, onClose, onUpdate, em
     setApiKeyLoading(true);
     setError(null);
     try {
-      const updatedUser = await revokeApiKey();
+      await revokeApiKey();
+      // Only the api_key field changes — clear it locally.
+      // Do not propagate the full response to onUpdate.
       setCurrentApiKey(null);
       setShowApiKey(false);
-      onUpdate(updatedUser);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to revoke API key";
       setError(errorMessage);

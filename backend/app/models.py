@@ -645,7 +645,7 @@ class AgentTrainingLog(Base):
     was_override = Column(Boolean, nullable=False)
     reward = Column(Numeric(4, 3), nullable=False)
     user_action = Column(String(20), nullable=True)  # 'ACCEPTED' | 'REJECTED'
-    source = Column(String(50), default='nesventory', nullable=False)
+    source = Column(String(50), default='nestarr', nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
@@ -694,4 +694,3 @@ class Collection(Base):
     items = relationship("Item", secondary=collection_items, backref="collections", lazy="select")
 
     creator = relationship("User", foreign_keys=[created_by])
-

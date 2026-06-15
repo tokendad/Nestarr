@@ -6,7 +6,9 @@ Tests the new heartbeat() and check_printer_ready() functionality.
 
 import sys
 import logging
-sys.path.insert(0, '/data/NesVentory/backend')
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "backend"))
 
 from app.niimbot.printer import PrinterClient, SerialTransport, BleakTransport, RfcommTransport
 

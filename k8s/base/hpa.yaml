@@ -1,16 +1,16 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: nesventory-hpa
-  namespace: nesventory
+  name: nestarr-hpa
+  namespace: nestarr
   labels:
-    app.kubernetes.io/name: nesventory
+    app.kubernetes.io/name: nestarr
     app.kubernetes.io/component: autoscaling
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: nesventory
+    name: nestarr
   minReplicas: 2
   maxReplicas: 10
   metrics:

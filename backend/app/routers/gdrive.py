@@ -1,5 +1,5 @@
 """
-Google Drive backup functionality for NesVentory.
+Google Drive backup functionality for Nestarr.
 
 Allows users to:
 1. Connect their Google Drive account
@@ -193,24 +193,24 @@ def create_backup_data(db: Session, user_id: str) -> dict:
 
 def get_or_create_backup_folder(service) -> str:
     """
-    Get or create the NesVentory backup folder in Google Drive.
-    
+    Get or create the Nestarr backup folder in Google Drive.
+
+    During the rename transition also accepts the legacy 'NesVentory Backups' folder so
+    that new backups land alongside existing ones rather than in a second orphaned folder.
+
     Returns the folder ID.
     """
-    folder_name = "NesVentory Backups"
-    
-    # Search for existing folder
-    query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
-    results = service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
-    files = results.get('files', [])
-    
-    if files:
-        return files[0]['id']
-    
-    # Create new folder
+    for folder_name in ("Nestarr Backups", "NesVentory Backups"):
+        query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+        results = service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+        files = results.get('files', [])
+        if files:
+            return files[0]['id']
+
+    # Neither folder exists — create the new one
     file_metadata = {
-        'name': folder_name,
-        'mimeType': 'application/vnd.google-apps.folder'
+        'name': "Nestarr Backups",
+        'mimeType': 'application/vnd.google-apps.folder',
     }
     folder = service.files().create(body=file_metadata, fields='id').execute()
     return folder['id']
@@ -336,7 +336,7 @@ async def create_backup(
     """
     Create a backup of the inventory and upload it to Google Drive.
     
-    The backup is stored as a JSON file in a "NesVentory Backups" folder.
+    The backup is stored as a JSON file in a "Nestarr Backups" folder.
     """
     # Get Google credentials
     creds = get_google_credentials(current_user)
@@ -361,7 +361,7 @@ async def create_backup(
         
         # Create filename with timestamp
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        filename = f"NesVentory_Backup_{timestamp}.json"
+        filename = f"Nestarr_Backup_{timestamp}.json"
         
         # Upload file
         file_metadata = {
@@ -423,37 +423,53 @@ async def list_backups(
         # Create Drive service
         service = build('drive', 'v3', credentials=creds)
         
-        # Get backup folder
-        folder_name = "NesVentory Backups"
-        query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
-        results = service.files().list(q=query, spaces='drive', fields='files(id)').execute()
-        folders = results.get('files', [])
-        
-        if not folders:
-            return GDriveBackupList(backups=[])
-        
-        folder_id = folders[0]['id']
-        
-        # List backup files in folder
-        query = f"'{folder_id}' in parents and name contains 'NesVentory_Backup' and trashed=false"
-        results = service.files().list(
-            q=query,
-            spaces='drive',
-            fields='files(id, name, createdTime, size)',
-            orderBy='createdTime desc'
-        ).execute()
-        
-        files = results.get('files', [])
+        # Search both the new and legacy folder names so pre-rename backups remain visible.
+        all_files: list[dict] = []
+        seen_ids: set[str] = set()
+        for folder_name, file_prefix in (
+            ("Nestarr Backups", "Nestarr_Backup"),
+            ("NesVentory Backups", "NesVentory_Backup"),
+        ):
+            folder_query = (
+                f"name='{folder_name}' and "
+                f"mimeType='application/vnd.google-apps.folder' and trashed=false"
+            )
+            folder_results = service.files().list(
+                q=folder_query, spaces='drive', fields='files(id)'
+            ).execute()
+            folders = folder_results.get('files', [])
+            if not folders:
+                continue
+
+            folder_id = folders[0]['id']
+            file_query = (
+                f"'{folder_id}' in parents and "
+                f"name contains '{file_prefix}' and trashed=false"
+            )
+            file_results = service.files().list(
+                q=file_query,
+                spaces='drive',
+                fields='files(id, name, createdTime, size)',
+                orderBy='createdTime desc',
+            ).execute()
+            for f in file_results.get('files', []):
+                if f['id'] not in seen_ids:
+                    seen_ids.add(f['id'])
+                    all_files.append(f)
+
+        # Re-sort merged results newest first
+        all_files.sort(key=lambda f: f.get('createdTime', ''), reverse=True)
+
         backups = [
             GDriveBackupFile(
                 id=f['id'],
                 name=f['name'],
                 created_time=f.get('createdTime', ''),
-                size=f.get('size')
+                size=f.get('size'),
             )
-            for f in files
+            for f in all_files
         ]
-        
+
         return GDriveBackupList(backups=backups)
     except Exception as e:
         logger.error(f"Failed to list backups for user {current_user.id}: {e}")

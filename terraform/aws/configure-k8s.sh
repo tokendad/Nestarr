@@ -1,5 +1,5 @@
 #!/bin/bash
-# NesVentory AWS Kubernetes Configuration Helper
+# Nestarr AWS Kubernetes Configuration Helper
 # This script helps configure the Kubernetes manifests with values from Terraform outputs
 
 set -euo pipefail
@@ -34,7 +34,7 @@ S3_BUCKET=$(terraform -chdir="${TERRAFORM_DIR}" output -raw s3_bucket_name 2>/de
     exit 1
 }
 
-S3_ROLE_ARN=$(terraform -chdir="${TERRAFORM_DIR}" output -raw nesventory_s3_role_arn 2>/dev/null) || {
+S3_ROLE_ARN=$(terraform -chdir="${TERRAFORM_DIR}" output -raw nestarr_s3_role_arn 2>/dev/null) || {
     echo "Error: Could not get S3 role ARN. Make sure 'terraform apply' has been run."
     exit 1
 }
@@ -79,7 +79,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     sed -i.bak "s|<your-s3-bucket>|${S3_BUCKET}|g" "${K8S_AWS_DIR}/kustomization.yaml"
     
     echo "Updating service-account.yaml..."
-    sed -i.bak "s|arn:aws:iam::<your-account-id>:role/nesventory-s3-access-role|${S3_ROLE_ARN}|g" "${K8S_AWS_DIR}/service-account.yaml"
+    sed -i.bak "s|arn:aws:iam::<your-account-id>:role/nestarr-s3-access-role|${S3_ROLE_ARN}|g" "${K8S_AWS_DIR}/service-account.yaml"
     
     # Clean up backup files
     rm -f "${K8S_AWS_DIR}/kustomization.yaml.bak" "${K8S_AWS_DIR}/service-account.yaml.bak"

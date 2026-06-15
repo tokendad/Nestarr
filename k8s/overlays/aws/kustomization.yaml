@@ -2,9 +2,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 metadata:
-  name: nesventory-aws
+  name: nestarr-aws
 
-namespace: nesventory
+namespace: nestarr
 
 resources:
   - ../../base
@@ -15,7 +15,7 @@ patches:
   # Configure deployment for AWS with S3 storage
   - target:
       kind: Deployment
-      name: nesventory
+      name: nestarr
     patch: |
       - op: replace
         path: /spec/replicas
@@ -34,7 +34,7 @@ patches:
         value: "1000m"
       - op: add
         path: /spec/template/spec/serviceAccountName
-        value: nesventory
+        value: nestarr
 
   # Configure PostgreSQL for AWS RDS (remove StatefulSet)
   - target:
@@ -53,7 +53,7 @@ patches:
   # AWS HPA settings
   - target:
       kind: HorizontalPodAutoscaler
-      name: nesventory-hpa
+      name: nestarr-hpa
     patch: |
       - op: replace
         path: /spec/minReplicas
@@ -65,7 +65,7 @@ patches:
   # Update ingress for AWS ALB
   - target:
       kind: Ingress
-      name: nesventory-ingress
+      name: nestarr-ingress
     patch: |
       - op: replace
         path: /metadata/annotations
@@ -79,7 +79,7 @@ patches:
 
 # ConfigMap patches for S3 storage
 configMapGenerator:
-  - name: nesventory-config
+  - name: nestarr-config
     behavior: merge
     literals:
       # Storage configuration
@@ -90,12 +90,12 @@ configMapGenerator:
       #   terraform output rds_address
       - DB_HOST=<your-rds-endpoint>.us-east-1.rds.amazonaws.com
       - DB_PORT=5432
-      - DB_NAME=nesventory
-      - DB_USER=nesventory
+      - DB_NAME=nestarr
+      - DB_USER=nestarr
 
 # Secret patches for AWS
 secretGenerator:
-  - name: nesventory-secrets
+  - name: nestarr-secrets
     behavior: merge
     literals:
       # S3 bucket name

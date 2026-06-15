@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import type { ItemCreate, Location, Tag, ContactInfo, DataTagInfo, AIStatusResponse, BarcodeLookupResult, BarcodeScanResult, Warranty, MultiBarcodeLookupResult, Photo, Document, DetectionResult, DynamicField } from "../lib/api";
 import { uploadPhoto, fetchTags, createTag, parseDataTagImage, getAIStatus, lookupBarcode, scanBarcodeImage, lookupBarcodeMulti, getApiBaseUrl, detectItemsFromImage, predictCategory, submitCategoryFeedback } from "../lib/api";
 import { formatPhotoType, getLocationPath, getFilenameFromUrl } from "../lib/utils";
-import { PHOTO_TYPES, ALLOWED_PHOTO_MIME_TYPES, ALLOWED_DOCUMENT_MIME_TYPES, DOCUMENT_TYPES, LIVING_TAG_NAME, RELATIONSHIP_LABELS, RETAILERS, BRANDS } from "../lib/constants";
+import { PHOTO_TYPES, ALLOWED_PHOTO_MIME_TYPES, ALLOWED_DOCUMENT_MIME_TYPES, DOCUMENT_TYPES, LIVING_TAG_NAME, RELATIONSHIP_LABELS, RETAILERS, BRANDS, STORAGE_KEYS } from "../lib/constants";
 import type { PhotoUpload, DocumentUpload } from "../lib/types";
 
 // Tab type for the form
@@ -180,7 +180,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
       .catch(() => setAIStatus({ enabled: false }));
 
     // Load custom field presets
-    const savedPresets = localStorage.getItem("NesVentory_CustomFieldsTemplate");
+    const savedPresets = localStorage.getItem(STORAGE_KEYS.CUSTOM_FIELDS_TEMPLATE);
     if (savedPresets) {
       try {
         setPresetFields(JSON.parse(savedPresets));
