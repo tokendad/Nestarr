@@ -1,4 +1,9 @@
 # Changelog
+n## [8.0.1] - 2026-06-16
+### Fixed
+- Automated release 8.0.1
+- Tags: Maintenance
+
 n## [8.0.0] - 2026-06-15
 ### Changed
 - Automated release 8.0.0
