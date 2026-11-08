@@ -10,6 +10,7 @@ type WarrantyStatus = "active" | "expiring-soon" | "expired" | "no-expiry";
 
 const WARRANTY_TYPES = [
   { value: "manufacturer", label: "🏭 Manufacturer Warranty" },
+  { value: "dealer",       label: "🚗 Dealer Warranty" },
   { value: "extended",     label: "📋 Extended Warranty" },
 ] as const;
 
@@ -371,8 +372,8 @@ const WarrantyTab: React.FC<WarrantyTabProps> = ({ item, onUpdate }) => {
   }, [entries, editingEntry, error]);
 
   const handleDelete = useCallback(async (w: Warranty) => {
-    const label = `${w.type === "manufacturer" ? "Manufacturer" : "Extended"} warranty` +
-      (w.provider ? ` from ${w.provider}` : "");
+    const typeLabel = w.type === "manufacturer" ? "Manufacturer" : w.type === "dealer" ? "Dealer" : "Extended";
+    const label = `${typeLabel} warranty` + (w.provider ? ` from ${w.provider}` : "");
     if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
     await persist(entries.filter(e => e.id !== w.id));
   }, [entries]);
@@ -420,7 +421,7 @@ const WarrantyTab: React.FC<WarrantyTabProps> = ({ item, onUpdate }) => {
           <div className="warranty-empty-icon" aria-hidden="true">🛡️</div>
           <p className="warranty-empty-title">No warranties recorded</p>
           <p className="warranty-empty-sub">
-            Track manufacturer and extended warranties so you always know
+            Track manufacturer, dealer, and extended warranties so you always know
             what's covered and when coverage expires.
           </p>
           <button className="btn-primary" onClick={handleAdd}>

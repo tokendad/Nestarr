@@ -281,6 +281,7 @@ const ItemDetails: React.FC<ItemDetailsProps> = ({
   // but also check tags for backward compatibility
   const isLivingItem = item.is_living === true || 
     (item.is_living === undefined && (item.tags?.some(tag => tag.name === LIVING_TAG_NAME) ?? false));
+  const isVehicleItem = item.is_vehicle === true;
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this item?")) {
@@ -361,7 +362,12 @@ const ItemDetails: React.FC<ItemDetailsProps> = ({
   return (
     <section className="panel item-details-panel">
       <div className="panel-header">
-        <h2>{item.name}</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <h2 style={{ margin: 0 }}>{item.name}</h2>
+          {isVehicleItem && (
+            <span className="tag-badge predefined" style={{ fontSize: '0.78rem' }}>Vehicle</span>
+          )}
+        </div>
         <button className="modal-close" onClick={onClose}>
           ✕
         </button>
@@ -423,23 +429,29 @@ const ItemDetails: React.FC<ItemDetailsProps> = ({
                 <>
                   {item.brand && (
                     <div className="detail-item">
-                      <span className="detail-label">Brand:</span>
+                      <span className="detail-label">{isVehicleItem ? "Make:" : "Brand:"}</span>
                       <span className="detail-value">{item.brand}</span>
                     </div>
                   )}
                   {item.model_number && (
                     <div className="detail-item">
-                      <span className="detail-label">Model Number:</span>
+                      <span className="detail-label">{isVehicleItem ? "Model:" : "Model Number:"}</span>
                       <span className="detail-value">{item.model_number}</span>
                     </div>
                   )}
-                  {item.serial_number && (
+                  {!isVehicleItem && item.serial_number && (
                     <div className="detail-item">
                       <span className="detail-label">Serial Number:</span>
                       <span className="detail-value">{item.serial_number}</span>
                     </div>
                   )}
-                  {item.upc && (
+                  {isVehicleItem && item.vin && (
+                    <div className="detail-item">
+                      <span className="detail-label">VIN:</span>
+                      <span className="detail-value">{item.vin}</span>
+                    </div>
+                  )}
+                  {!isVehicleItem && item.upc && (
                     <div className="detail-item">
                       <span className="detail-label">UPC:</span>
                       <span className="detail-value">{item.upc}</span>
@@ -449,6 +461,32 @@ const ItemDetails: React.FC<ItemDetailsProps> = ({
               )}
             </div>
           </div>
+
+          {isVehicleItem && (
+            <div className="details-section">
+              <h3>Vehicle Details</h3>
+              <div className="details-grid">
+                {item.vehicle_year != null && (
+                  <div className="detail-item">
+                    <span className="detail-label">Year:</span>
+                    <span className="detail-value">{item.vehicle_year}</span>
+                  </div>
+                )}
+                {item.license_plate && (
+                  <div className="detail-item">
+                    <span className="detail-label">License Plate:</span>
+                    <span className="detail-value">{item.license_plate}</span>
+                  </div>
+                )}
+                {item.mileage != null && !isNaN(Number(item.mileage)) && (
+                  <div className="detail-item">
+                    <span className="detail-label">Mileage:</span>
+                    <span className="detail-value">{Number(item.mileage).toLocaleString()} mi</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Living Item Details Section */}
           {isLivingItem && (

@@ -453,6 +453,12 @@ class ItemBase(BaseModel):
     estimated_value_user_name: Optional[str] = None  # Username who supplied the value
     retailer: Optional[str] = None
     upc: Optional[str] = None
+    # Vehicle-specific fields
+    is_vehicle: bool = False
+    vehicle_year: Optional[int] = None
+    vin: Optional[str] = None
+    license_plate: Optional[str] = None
+    mileage: Optional[int] = None
     warranties: Optional[List[dict]] = None
     location_id: Optional[UUID] = None
     # Living item fields
@@ -472,6 +478,8 @@ class ItemCreate(ItemBase):
     @model_validator(mode='after')
     def validate_living_item_fields(self):
         """Validate that living and non-living fields don't conflict."""
+        if self.is_living and self.is_vehicle:
+            raise ValueError('An item cannot be both living and a vehicle')
         if self.is_living:
             # Living items should not have typical inventory fields
             if self.purchase_price is not None:
@@ -482,6 +490,28 @@ class ItemCreate(ItemBase):
                 raise ValueError('Living items cannot have a UPC code')
             if self.serial_number:
                 raise ValueError('Living items cannot have a serial number')
+            if self.vehicle_year is not None:
+                raise ValueError('Living items cannot have a vehicle_year')
+            if self.vin:
+                raise ValueError('Living items cannot have a VIN')
+            if self.license_plate:
+                raise ValueError('Living items cannot have a license plate')
+            if self.mileage is not None:
+                raise ValueError('Living items cannot have mileage')
+        elif self.is_vehicle:
+            # Vehicle items are non-living, but should not carry living-only data
+            if self.birthdate is not None:
+                raise ValueError('Vehicles cannot have a birthdate')
+            if self.contact_info is not None:
+                raise ValueError('Vehicles cannot have contact information')
+            if self.relationship_type:
+                raise ValueError('Vehicles cannot have a relationship type')
+            if self.is_current_user:
+                raise ValueError('Vehicles cannot be associated with the current user')
+            if self.serial_number:
+                raise ValueError('Vehicles cannot have a serial number')
+            if self.mileage is not None and self.mileage < 0:
+                raise ValueError('Vehicle mileage cannot be negative')
         else:
             # Non-living items should not have living-specific fields
             if self.birthdate is not None:
@@ -492,6 +522,14 @@ class ItemCreate(ItemBase):
                 raise ValueError('Only living items can have a relationship type')
             if self.is_current_user:
                 raise ValueError('Only living items can be associated with the current user')
+            if self.vehicle_year is not None:
+                raise ValueError('Only vehicles can have a vehicle_year')
+            if self.vin:
+                raise ValueError('Only vehicles can have a VIN')
+            if self.license_plate:
+                raise ValueError('Only vehicles can have a license plate')
+            if self.mileage is not None:
+                raise ValueError('Only vehicles can have mileage')
         
         return self
 
@@ -513,6 +551,12 @@ class ItemUpdate(BaseModel):
     estimated_value_user_name: Optional[str] = None
     retailer: Optional[str] = None
     upc: Optional[str] = None
+    # Vehicle-specific fields
+    is_vehicle: Optional[bool] = None
+    vehicle_year: Optional[int] = None
+    vin: Optional[str] = None
+    license_plate: Optional[str] = None
+    mileage: Optional[int] = None
     warranties: Optional[List[dict]] = None
     location_id: Optional[UUID] = None
     tag_ids: Optional[List[UUID]] = None
@@ -529,6 +573,8 @@ class ItemUpdate(BaseModel):
     @model_validator(mode='after')
     def validate_living_item_fields(self):
         """Validate that living and non-living fields don't conflict on update."""
+        if self.is_living and self.is_vehicle:
+            raise ValueError('An item cannot be both living and a vehicle')
         # Only validate if is_living is being set
         if self.is_living is not None:
             if self.is_living:
@@ -541,6 +587,14 @@ class ItemUpdate(BaseModel):
                     raise ValueError('Living items cannot have a UPC code')
                 if self.serial_number:
                     raise ValueError('Living items cannot have a serial number')
+                if self.vehicle_year is not None:
+                    raise ValueError('Living items cannot have a vehicle_year')
+                if self.vin:
+                    raise ValueError('Living items cannot have a VIN')
+                if self.license_plate:
+                    raise ValueError('Living items cannot have a license plate')
+                if self.mileage is not None:
+                    raise ValueError('Living items cannot have mileage')
             else:
                 # Non-living items should not have living-specific fields
                 if self.birthdate is not None:
@@ -551,6 +605,40 @@ class ItemUpdate(BaseModel):
                     raise ValueError('Only living items can have a relationship type')
                 if self.is_current_user:
                     raise ValueError('Only living items can be associated with the current user')
+
+        if self.is_vehicle is not None:
+            if self.is_vehicle:
+                if self.birthdate is not None:
+                    raise ValueError('Vehicles cannot have a birthdate')
+                if self.contact_info is not None:
+                    raise ValueError('Vehicles cannot have contact information')
+                if self.relationship_type:
+                    raise ValueError('Vehicles cannot have a relationship type')
+                if self.is_current_user:
+                    raise ValueError('Vehicles cannot be associated with the current user')
+                if self.serial_number:
+                    raise ValueError('Vehicles cannot have a serial number')
+                if self.mileage is not None and self.mileage < 0:
+                    raise ValueError('Vehicle mileage cannot be negative')
+            else:
+                if self.vehicle_year is not None:
+                    raise ValueError('Only vehicles can have a vehicle_year')
+                if self.vin:
+                    raise ValueError('Only vehicles can have a VIN')
+                if self.license_plate:
+                    raise ValueError('Only vehicles can have a license plate')
+                if self.mileage is not None:
+                    raise ValueError('Only vehicles can have mileage')
+
+        if self.is_living is None and self.is_vehicle is None:
+            if self.vehicle_year is not None:
+                raise ValueError('Only vehicles can have a vehicle_year')
+            if self.vin:
+                raise ValueError('Only vehicles can have a VIN')
+            if self.license_plate:
+                raise ValueError('Only vehicles can have a license plate')
+            if self.mileage is not None:
+                raise ValueError('Only vehicles can have mileage')
         
         return self
 
@@ -1022,4 +1110,3 @@ class NetworkImportResponse(BaseModel):
     updated: int
     skipped: int
     errors: List[str] = []
-

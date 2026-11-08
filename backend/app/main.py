@@ -44,9 +44,10 @@ def run_migrations():
                        "supports_image_processing", "gemini_model", "must_change_password", "niimbot_printer_config",
                        "additional_info", "thumbnail_path", "location_category", "custom_location_categories",
                        "paint_info", "is_living", "birthdate", "contact_info", "relationship_type",
+                       "is_vehicle", "vehicle_year", "vin", "license_plate", "mileage",
                        "is_current_user", "associated_user_id",
                        "llm_provider_type", "llm_base_url", "llm_api_key", "llm_model"}
-    ALLOWED_TYPES = {"VARCHAR(255)", "VARCHAR(20)", "VARCHAR(64)", "VARCHAR(7)", "VARCHAR(100)", "BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT TRUE", "INTEGER DEFAULT 7", "TIMESTAMP", "TEXT", "JSON", "VARCHAR(1024)", "VARCHAR(50)", "DATE", "UUID"}
+    ALLOWED_TYPES = {"VARCHAR(255)", "VARCHAR(20)", "VARCHAR(32)", "VARCHAR(64)", "VARCHAR(7)", "VARCHAR(100)", "BOOLEAN DEFAULT FALSE", "BOOLEAN DEFAULT TRUE", "INTEGER", "INTEGER DEFAULT 7", "TIMESTAMP", "TEXT", "JSON", "VARCHAR(1024)", "VARCHAR(50)", "DATE", "UUID"}
     
     # Define migrations: (table_name, column_name, column_definition)
     migrations = [
@@ -100,6 +101,12 @@ def run_migrations():
         ("items", "relationship_type", "VARCHAR(100)"),
         ("items", "is_current_user", "BOOLEAN DEFAULT FALSE"),
         ("items", "associated_user_id", "UUID"),
+        # Item model: Vehicle support
+        ("items", "is_vehicle", "BOOLEAN DEFAULT FALSE"),
+        ("items", "vehicle_year", "INTEGER"),
+        ("items", "vin", "VARCHAR(64)"),
+        ("items", "license_plate", "VARCHAR(32)"),
+        ("items", "mileage", "INTEGER"),
         # SystemSettings model: local/OpenAI-compatible LLM provider (issue #560)
         ("system_settings", "llm_provider_type", "VARCHAR(20)"),
         ("system_settings", "llm_base_url", "VARCHAR(1024)"),
@@ -175,6 +182,9 @@ def run_migrations():
 
         # Phase 2D: Migrate old niimbot_printer_config to new profile-based schema
         migrate_niimbot_configs_to_profiles(conn)
+
+        # One-time data migration: flag Ford items as vehicles
+        migrate_ford_items_to_vehicle(conn)
 
 
 def migrate_niimbot_configs_to_profiles(conn):
@@ -291,6 +301,59 @@ def migrate_niimbot_configs_to_profiles(conn):
                 print(f"Migration warning: Could not migrate config for user {user_id}: {e}")
     except Exception as e:
         print(f"Migration warning: Phase 2D data migration failed: {e}")
+
+
+def migrate_ford_items_to_vehicle(conn):
+    """One-time data migration to flag existing Ford inventory records as vehicles."""
+    try:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS data_migrations (
+                name VARCHAR(255) PRIMARY KEY,
+                applied_at TIMESTAMP NOT NULL
+            )
+        """))
+
+        vin_copy_applied = conn.execute(
+            text("SELECT name FROM data_migrations WHERE name = :name LIMIT 1"),
+            {"name": "copy_ford_serial_to_vin"}
+        ).fetchone()
+        if not vin_copy_applied:
+            vin_result = conn.execute(text("""
+                UPDATE items
+                SET vin = serial_number
+                WHERE brand = 'Ford'
+                  AND serial_number IS NOT NULL
+                  AND TRIM(serial_number) != ''
+                  AND (vin IS NULL OR TRIM(vin) = '')
+            """))
+
+            conn.execute(
+                text("INSERT INTO data_migrations (name, applied_at) VALUES (:name, CURRENT_TIMESTAMP)"),
+                {"name": "copy_ford_serial_to_vin"}
+            )
+            print(f"Migration: copied {vin_result.rowcount or 0} Ford serial numbers to VIN")
+
+        already_applied = conn.execute(
+            text("SELECT name FROM data_migrations WHERE name = :name LIMIT 1"),
+            {"name": "flag_ford_items_as_vehicles"}
+        ).fetchone()
+        if already_applied:
+            return
+
+        result = conn.execute(text("""
+            UPDATE items
+            SET is_vehicle = 1
+            WHERE brand = 'Ford'
+              AND COALESCE(is_vehicle, 0) = 0
+        """))
+
+        conn.execute(
+            text("INSERT INTO data_migrations (name, applied_at) VALUES (:name, CURRENT_TIMESTAMP)"),
+            {"name": "flag_ford_items_as_vehicles"}
+        )
+        print(f"Migration: flagged {result.rowcount or 0} Ford items as vehicles")
+    except Exception as e:
+        print(f"Migration warning: Ford vehicle flag migration failed: {e}")
 
 
 # Auto-create tables on startup and seed with test data

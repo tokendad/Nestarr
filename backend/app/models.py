@@ -291,6 +291,13 @@ class Item(Base):
     # UPC / barcode
     upc = Column(String(64), nullable=True, index=True)
 
+    # Vehicle-specific fields
+    is_vehicle = Column(Boolean, default=False, nullable=False, index=True)
+    vehicle_year = Column(Integer, nullable=True)
+    vin = Column(String(64), nullable=True, index=True)
+    license_plate = Column(String(32), nullable=True, index=True)
+    mileage = Column(Integer, nullable=True)
+
     # JSON column for cross-database compatibility (SQLite/PostgreSQL)
     # Note: PostgreSQL JSONB offers better performance, but JSON works across both
     warranties = Column(JSON, nullable=True)

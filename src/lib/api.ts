@@ -11,7 +11,7 @@ export interface LoginResponse {
 
 export interface Warranty {
   id?: string;
-  type: 'manufacturer' | 'extended';
+  type: 'manufacturer' | 'dealer' | 'extended';
   provider?: string | null;
   policy_number?: string | null;
   duration_months?: number | null;
@@ -116,6 +116,11 @@ export interface Item {
   estimated_value_user_name?: string | null;  // Username who supplied the value
   retailer?: string | null;
   upc?: string | null;
+  is_vehicle?: boolean;
+  vehicle_year?: number | null;
+  vin?: string | null;
+  license_plate?: string | null;
+  mileage?: number | null;
   location_id?: number | string | null;
   warranties?: Warranty[];
   photos?: Photo[];
@@ -155,6 +160,11 @@ export interface ItemCreate {
   estimated_value_user_name?: string | null;  // Username who supplied the value
   retailer?: string | null;
   upc?: string | null;
+  is_vehicle?: boolean;
+  vehicle_year?: number | null;
+  vin?: string | null;
+  license_plate?: string | null;
+  mileage?: number | null;
   location_id?: number | string | null;
   warranties?: Warranty[];
   tag_ids?: string[];
@@ -3185,5 +3195,3 @@ export async function importNetworkDevices(req: NetworkImportRequest): Promise<N
   });
   return handleResponse<NetworkImportResponse>(res);
 }
-
-

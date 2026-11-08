@@ -988,7 +988,15 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
                       />
                     </td>
                     {enabledColumns.map(col => {
-                      if (col.key === "name") return <td key={col.key}>{item.name}</td>;
+                       if (col.key === "name") return (
+                         <td key={col.key}>
+                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                             <span>{item.name}</span>
+                             {item.is_vehicle && <span className="tag-badge predefined" style={{ fontSize: '0.72rem' }}>Vehicle</span>}
+                             {item.is_living && <span className="tag-badge predefined" style={{ fontSize: '0.72rem' }}>Living</span>}
+                           </span>
+                         </td>
+                       );
                       if (col.key === "brand") return <td key={col.key}>{item.brand || "—"}</td>;
                       if (col.key === "model_number") return <td key={col.key}>{item.model_number || "—"}</td>;
                       if (col.key === "serial_number") return <td key={col.key}>{item.serial_number || "—"}</td>;

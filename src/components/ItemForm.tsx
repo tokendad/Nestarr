@@ -58,6 +58,11 @@ const ItemForm: React.FC<ItemFormProps> = ({
     estimated_value_user_name: initialData?.estimated_value_user_name || undefined,
     retailer: initialData?.retailer || "",
     upc: initialData?.upc || "",
+    is_vehicle: initialData?.is_vehicle || false,
+    vehicle_year: initialData?.vehicle_year ?? undefined,
+    vin: initialData?.vin || (initialData?.is_vehicle ? initialData?.serial_number : "") || "",
+    license_plate: initialData?.license_plate || "",
+    mileage: initialData?.mileage ?? undefined,
     location_id: initialData?.location_id || null,
     tag_ids: initialData?.tags?.map(t => t.id) || [],
     // Living item fields
@@ -168,6 +173,8 @@ const ItemForm: React.FC<ItemFormProps> = ({
     return (formData.tag_ids || []).includes(livingTagId);
   }, [livingTagId, formData.tag_ids]);
 
+  const isVehicleItem = formData.is_vehicle === true;
+
   // Load tags and AI status on mount
   useEffect(() => {
     fetchTags()
@@ -242,8 +249,8 @@ const ItemForm: React.FC<ItemFormProps> = ({
 
   // Debounced Category Agent prediction: fires 600ms after name or description changes
   useEffect(() => {
-    // Skip prediction for living items (people/pets/plants) — not D56 collectibles
-    if (formData.is_living) return;
+    // Skip prediction for living items and vehicles — not D56 collectibles
+    if (formData.is_living || formData.is_vehicle) return;
 
     const name = formData.name?.trim() || '';
     const description = (formData.description || '').trim();
@@ -278,7 +285,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
     return () => {
       if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
     };
-  }, [formData.name, formData.description, formData.is_living]);
+  }, [formData.name, formData.description, formData.is_living, formData.is_vehicle]);
 
   // Update is_living flag and clear irrelevant fields when switching between living/non-living modes.
   // This is intentional behavior: Living items (people, pets, plants) don't have purchase dates, 
@@ -298,6 +305,11 @@ const ItemForm: React.FC<ItemFormProps> = ({
           serial_number: "",
           retailer: "",
           upc: "",
+          is_vehicle: false,
+          vehicle_year: undefined,
+          vin: "",
+          license_plate: "",
+          mileage: undefined,
         } : {
           // Clear living fields when switching to non-living mode
           birthdate: "",
@@ -325,6 +337,10 @@ const ItemForm: React.FC<ItemFormProps> = ({
             ? value === ""
               ? undefined
               : parseFloat(value)
+            : name === "vehicle_year" || name === "mileage"
+            ? value === ""
+              ? undefined
+              : parseInt(value, 10)
             : name === "location_id"
             ? value === ""
               ? null
@@ -424,6 +440,11 @@ const ItemForm: React.FC<ItemFormProps> = ({
         birthdate: formData.birthdate === '' ? null : formData.birthdate,
         location_id: formData.location_id === '' ? null : formData.location_id,
         associated_user_id: formData.associated_user_id === '' ? null : formData.associated_user_id,
+        vehicle_year: formData.vehicle_year === undefined ? undefined : formData.vehicle_year,
+        vin: formData.vin === '' ? null : formData.vin,
+        license_plate: formData.license_plate === '' ? null : formData.license_plate,
+        mileage: formData.mileage === undefined ? undefined : formData.mileage,
+        serial_number: formData.is_vehicle ? undefined : formData.serial_number,
         warranties: warranties.length > 0 ? warranties : undefined,
       };
       await onSubmit(sanitizedData, photos, documents);
@@ -531,13 +552,47 @@ const ItemForm: React.FC<ItemFormProps> = ({
     setFormData(prev => {
       const currentTags = prev.tag_ids || [];
       const isSelected = currentTags.includes(tagId);
+      const nextTags = isSelected
+        ? currentTags.filter(id => id !== tagId)
+        : [...currentTags, tagId];
+
+      if (!isSelected && tagId === livingTagId) {
+        return {
+          ...prev,
+          is_vehicle: false,
+          tag_ids: nextTags,
+        };
+      }
       return {
         ...prev,
-        tag_ids: isSelected
-          ? currentTags.filter(id => id !== tagId)
-          : [...currentTags, tagId]
+        tag_ids: nextTags
       };
     });
+  };
+
+  const handleVehicleToggle = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      is_vehicle: checked,
+      ...(checked ? {
+        is_living: false,
+        birthdate: "",
+        contact_info: null,
+        relationship_type: "",
+        is_current_user: false,
+        associated_user_id: null,
+        upc: "",
+        serial_number: "",
+      } : {
+        vehicle_year: undefined,
+        vin: "",
+        license_plate: "",
+        mileage: undefined,
+      }),
+      ...(checked ? {
+        tag_ids: (prev.tag_ids || []).filter(id => id !== livingTagId),
+      } : {}),
+    }));
   };
 
   const handleCreateTag = async () => {
@@ -780,7 +835,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
   };
 
   // Warranty handlers
-  const addWarranty = (type: 'manufacturer' | 'extended') => {
+  const addWarranty = (type: 'manufacturer' | 'dealer' | 'extended') => {
     setWarranties(prev => [...prev, { type }]);
   };
 
@@ -856,6 +911,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
   };
 
   const livingMode = isLivingItemSelected;
+  const vehicleMode = isVehicleItem;
 
   // Render content for Tab 1: Basic Item Information
   const renderBasicInfoTab = () => (
@@ -871,7 +927,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
           onChange={handleChange}
           required
           disabled={loading}
-          placeholder={livingMode ? "Person/Pet/Plant name" : "Item name"}
+          placeholder={livingMode ? "Person/Pet/Plant name" : vehicleMode ? "Vehicle name" : "Item name"}
         />
       </div>
 
@@ -884,12 +940,26 @@ const ItemForm: React.FC<ItemFormProps> = ({
           onChange={handleChange}
           rows={3}
           disabled={loading}
-          placeholder={livingMode ? "Notes about this person, pet, or plant" : "Item description"}
+          placeholder={livingMode ? "Notes about this person, pet, or plant" : vehicleMode ? "Notes about this vehicle" : "Item description"}
         />
       </div>
 
+      {!livingMode && (
+        <div className="form-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={vehicleMode}
+              onChange={(e) => handleVehicleToggle(e.target.checked)}
+              disabled={loading}
+            />
+            <span>This is a vehicle (car, truck, motorcycle, etc.)</span>
+          </label>
+        </div>
+      )}
+
       {/* Category Agent AI Suggestion Badge */}
-      {!livingMode &&
+      {!livingMode && !vehicleMode &&
         aiSeriesSuggestion?.series &&
         (aiSeriesSuggestion.confidence ?? 0) >= 0.70 &&
         !aiSuggestionDismissed && (
@@ -1071,9 +1141,74 @@ const ItemForm: React.FC<ItemFormProps> = ({
       {/* Non-Living Item Fields */}
       {!livingMode && (
         <>
+          {vehicleMode && (
+            <div className="form-section vehicle-section">
+              <h3>Vehicle Details</h3>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="vehicle_year">Vehicle Year</label>
+                  <input
+                    type="number"
+                    id="vehicle_year"
+                    name="vehicle_year"
+                    value={formData.vehicle_year ?? ""}
+                    onChange={handleChange}
+                    min="1886"
+                    max={new Date().getFullYear() + 1}
+                    disabled={loading}
+                    placeholder="2024"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="mileage">Mileage</label>
+                  <input
+                    type="number"
+                    id="mileage"
+                    name="mileage"
+                    value={formData.mileage ?? ""}
+                    onChange={handleChange}
+                    min="0"
+                    step="1"
+                    disabled={loading}
+                    placeholder="Current odometer reading"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="license_plate">License Plate</label>
+                  <input
+                    type="text"
+                    id="license_plate"
+                    name="license_plate"
+                    value={formData.license_plate || ""}
+                    onChange={handleChange}
+                    disabled={loading}
+                    placeholder="Plate number"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="vin">VIN</label>
+                  <input
+                    type="text"
+                    id="vin"
+                    name="vin"
+                    value={formData.vin || ""}
+                    onChange={handleChange}
+                    disabled={loading}
+                    placeholder="Vehicle identification number"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="form-row">
             <div className="form-group" style={{ position: 'relative' }}>
-              <label htmlFor="brand">Brand</label>
+              <label htmlFor="brand">{vehicleMode ? "Make" : "Brand"}</label>
               <input
                 ref={brandInputRef}
                 type="text"
@@ -1087,7 +1222,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
                 onFocus={() => setShowBrandSuggestions(true)}
                 disabled={loading}
                 autoComplete="off"
-                placeholder="Select or type brand..."
+                placeholder={vehicleMode ? "Select or type make..." : "Select or type brand..."}
               />
               {showBrandSuggestions && (
                 <div 
@@ -1154,7 +1289,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
             </div>
 
             <div className="form-group">
-              <label htmlFor="model_number">Model Number</label>
+              <label htmlFor="model_number">{vehicleMode ? "Model" : "Model Number"}</label>
               <input
                 type="text"
                 id="model_number"
@@ -1166,69 +1301,71 @@ const ItemForm: React.FC<ItemFormProps> = ({
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="serial_number">Serial Number</label>
-              <input
-                type="text"
-                id="serial_number"
-                name="serial_number"
-                value={formData.serial_number || ""}
-                onChange={handleChange}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="upc">UPC / Barcode</label>
-              <div className="upc-input-wrapper">
+          {!vehicleMode && (
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="serial_number">Serial Number</label>
                 <input
                   type="text"
-                  id="upc"
-                  name="upc"
-                  value={formData.upc || ""}
+                  id="serial_number"
+                  name="serial_number"
+                  value={formData.serial_number || ""}
                   onChange={handleChange}
-                  disabled={loading || lookingUpBarcode || scanningBarcode}
-                  placeholder="Enter UPC/barcode"
+                  disabled={loading}
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="upc">UPC / Barcode</label>
+                <div className="upc-input-wrapper">
+                  <input
+                    type="text"
+                    id="upc"
+                    name="upc"
+                    value={formData.upc || ""}
+                    onChange={handleChange}
+                    disabled={loading || lookingUpBarcode || scanningBarcode}
+                    placeholder="Enter UPC/barcode"
+                  />
+                  {aiStatus?.enabled && (
+                    <>
+                      {/* Hidden file input for barcode camera scanning */}
+                      <input
+                        type="file"
+                        ref={barcodeScanInputRef}
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleBarcodeScanFileChange}
+                        disabled={loading || scanningBarcode}
+                        style={{ display: "none" }}
+                      />
+                      <button
+                        type="button"
+                        className="btn-outline btn-barcode-scan"
+                        onClick={handleBarcodeScan}
+                        disabled={loading || scanningBarcode}
+                        title="Scan barcode with camera"
+                      >
+                        {scanningBarcode ? "🔄" : "📷"}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-outline btn-barcode-lookup"
+                        onClick={() => handleBarcodeLookup()}
+                        disabled={loading || lookingUpBarcode || !formData.upc?.trim()}
+                        title="Look up product info from UPC/barcode"
+                      >
+                        {lookingUpBarcode ? "🔄 Looking up..." : "🔍 UPC Lookup"}
+                      </button>
+                    </>
+                  )}
+                </div>
                 {aiStatus?.enabled && (
-                  <>
-                    {/* Hidden file input for barcode camera scanning */}
-                    <input
-                      type="file"
-                      ref={barcodeScanInputRef}
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleBarcodeScanFileChange}
-                      disabled={loading || scanningBarcode}
-                      style={{ display: "none" }}
-                    />
-                    <button
-                      type="button"
-                      className="btn-outline btn-barcode-scan"
-                      onClick={handleBarcodeScan}
-                      disabled={loading || scanningBarcode}
-                      title="Scan barcode with camera"
-                    >
-                      {scanningBarcode ? "🔄" : "📷"}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-outline btn-barcode-lookup"
-                      onClick={() => handleBarcodeLookup()}
-                      disabled={loading || lookingUpBarcode || !formData.upc?.trim()}
-                      title="Look up product info from UPC/barcode"
-                    >
-                      {lookingUpBarcode ? "🔄 Looking up..." : "🔍 UPC Lookup"}
-                    </button>
-                  </>
+                  <span className="help-text">Tap 📷 to scan barcode and auto-lookup product info</span>
                 )}
               </div>
-              {aiStatus?.enabled && (
-                <span className="help-text">Tap 📷 to scan barcode and auto-lookup product info</span>
-              )}
             </div>
-          </div>
+          )}
 
           {/* Barcode Lookup Results - Multi-Database with Accept/Reject Flow */}
           {barcodeResult && (
@@ -1619,13 +1756,13 @@ const ItemForm: React.FC<ItemFormProps> = ({
   const renderWarrantyTab = () => (
     <div className="tab-content">
       <div className="form-section">
-        <h3>Warranty Information</h3>
-        <p className="help-text">Add manufacturer or extended warranty information for this item</p>
+        <h3>{vehicleMode ? "Vehicle Warranty Information" : "Warranty Information"}</h3>
+        <p className="help-text">Add manufacturer, dealer, or extended warranty information for this item</p>
         
         {warranties.map((warranty, index) => (
           <div key={index} className="warranty-form-item">
             <div className="warranty-header">
-              <h4>{warranty.type === 'manufacturer' ? '🏭 Manufacturer Warranty' : '📋 Extended Warranty'}</h4>
+              <h4>{warranty.type === 'manufacturer' ? '🏭 Manufacturer Warranty' : warranty.type === 'dealer' ? '🚗 Dealer Warranty' : '📋 Extended Warranty'}</h4>
               <button
                 type="button"
                 className="btn-outline btn-small btn-danger-outline"
@@ -1703,6 +1840,14 @@ const ItemForm: React.FC<ItemFormProps> = ({
             disabled={loading}
           >
             + Add Manufacturer Warranty
+          </button>
+          <button
+            type="button"
+            className="btn-outline"
+            onClick={() => addWarranty('dealer')}
+            disabled={loading}
+          >
+            + Add Dealer Warranty
           </button>
           <button
             type="button"
@@ -2253,7 +2398,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
                 className="modal-header-photo"
               />
             )}
-            <h2>{isEditing ? (initialData?.name || "Edit Item") : livingMode ? "Add Living Item" : "Add New Item"}</h2>
+            <h2>{isEditing ? (initialData?.name || "Edit Item") : livingMode ? "Add Living Item" : vehicleMode ? "Add Vehicle" : "Add New Item"}</h2>
           </div>
           <button className="modal-close" onClick={onCancel}>
             ✕
