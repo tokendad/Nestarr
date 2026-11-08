@@ -4,7 +4,9 @@ Tests for Living Items functionality (people, pets, plants)
 import pytest
 from fastapi.testclient import TestClient
 from datetime import date
+from sqlalchemy import create_engine, text
 from app.main import app
+from app.main import migrate_ford_items_to_vehicle
 
 client = TestClient(app)
 
@@ -130,6 +132,48 @@ def test_create_vehicle():
     assert data["vin"] == "1FT7W2BT4MEC12345"
     assert data["license_plate"] == "ABC-1234"
     assert data["mileage"] == 48250
+
+
+def test_ford_vehicle_migration_copies_existing_serial_to_vin_after_flag_migration():
+    """Existing users who already ran the flag migration keep their original VIN."""
+    engine = create_engine("sqlite:///:memory:", future=True)
+
+    with engine.begin() as conn:
+        conn.execute(text("""
+            CREATE TABLE items (
+                id INTEGER PRIMARY KEY,
+                brand VARCHAR(255),
+                serial_number VARCHAR(255),
+                is_vehicle BOOLEAN DEFAULT FALSE,
+                vin VARCHAR(64)
+            )
+        """))
+        conn.execute(text("""
+            CREATE TABLE data_migrations (
+                name VARCHAR(255) PRIMARY KEY,
+                applied_at TIMESTAMP NOT NULL
+            )
+        """))
+        conn.execute(text("""
+            INSERT INTO items (id, brand, serial_number, is_vehicle, vin)
+            VALUES (1, 'Ford', '1FT7W2BT4MEC12345', 1, NULL)
+        """))
+        conn.execute(text("""
+            INSERT INTO data_migrations (name, applied_at)
+            VALUES ('flag_ford_items_as_vehicles', CURRENT_TIMESTAMP)
+        """))
+
+        migrate_ford_items_to_vehicle(conn)
+
+        item = conn.execute(text("""
+            SELECT serial_number, vin, is_vehicle
+            FROM items
+            WHERE id = 1
+        """)).mappings().one()
+
+    assert item["serial_number"] == "1FT7W2BT4MEC12345"
+    assert item["vin"] == "1FT7W2BT4MEC12345"
+    assert item["is_vehicle"] == 1
 
 
 def test_living_item_cannot_have_purchase_price():

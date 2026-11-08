@@ -313,6 +313,26 @@ def migrate_ford_items_to_vehicle(conn):
             )
         """))
 
+        vin_copy_applied = conn.execute(
+            text("SELECT name FROM data_migrations WHERE name = :name LIMIT 1"),
+            {"name": "copy_ford_serial_to_vin"}
+        ).fetchone()
+        if not vin_copy_applied:
+            vin_result = conn.execute(text("""
+                UPDATE items
+                SET vin = serial_number
+                WHERE brand = 'Ford'
+                  AND serial_number IS NOT NULL
+                  AND TRIM(serial_number) != ''
+                  AND (vin IS NULL OR TRIM(vin) = '')
+            """))
+
+            conn.execute(
+                text("INSERT INTO data_migrations (name, applied_at) VALUES (:name, CURRENT_TIMESTAMP)"),
+                {"name": "copy_ford_serial_to_vin"}
+            )
+            print(f"Migration: copied {vin_result.rowcount or 0} Ford serial numbers to VIN")
+
         already_applied = conn.execute(
             text("SELECT name FROM data_migrations WHERE name = :name LIMIT 1"),
             {"name": "flag_ford_items_as_vehicles"}

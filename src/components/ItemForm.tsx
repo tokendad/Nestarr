@@ -60,7 +60,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
     upc: initialData?.upc || "",
     is_vehicle: initialData?.is_vehicle || false,
     vehicle_year: initialData?.vehicle_year ?? undefined,
-    vin: initialData?.vin || "",
+    vin: initialData?.vin || (initialData?.is_vehicle ? initialData?.serial_number : "") || "",
     license_plate: initialData?.license_plate || "",
     mileage: initialData?.mileage ?? undefined,
     location_id: initialData?.location_id || null,
@@ -444,6 +444,7 @@ const ItemForm: React.FC<ItemFormProps> = ({
         vin: formData.vin === '' ? null : formData.vin,
         license_plate: formData.license_plate === '' ? null : formData.license_plate,
         mileage: formData.mileage === undefined ? undefined : formData.mileage,
+        serial_number: formData.is_vehicle ? undefined : formData.serial_number,
         warranties: warranties.length > 0 ? warranties : undefined,
       };
       await onSubmit(sanitizedData, photos, documents);
@@ -1362,36 +1363,6 @@ const ItemForm: React.FC<ItemFormProps> = ({
                 {aiStatus?.enabled && (
                   <span className="help-text">Tap 📷 to scan barcode and auto-lookup product info</span>
                 )}
-              </div>
-            </div>
-          )}
-
-          {vehicleMode && (
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="vin">VIN</label>
-                <input
-                  type="text"
-                  id="vin"
-                  name="vin"
-                  value={formData.vin || ""}
-                  onChange={handleChange}
-                  disabled={loading}
-                  placeholder="Vehicle identification number"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="license_plate">License Plate</label>
-                <input
-                  type="text"
-                  id="license_plate"
-                  name="license_plate"
-                  value={formData.license_plate || ""}
-                  onChange={handleChange}
-                  disabled={loading}
-                  placeholder="Plate number"
-                />
               </div>
             </div>
           )}
