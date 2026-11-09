@@ -2,22 +2,22 @@ fastapi==0.162.0
 publicsuffix2==2.20191221
 werkzeug==3.1.9
 uvicorn[standard]==0.54.0
-SQLAlchemy==2.1.6
+SQLAlchemy==2.1.8
 psycopg2-binary==2.9.13
 asyncpg==0.32.0
 python-jose[cryptography]==3.5.0
 bcrypt==5.0.0
-pydantic==2.14.2
+pydantic==2.14.3
 pydantic-settings==2.16.2
 email-validator==2.3.0
 python-multipart>=0.0.33
 python-dotenv==1.2.4
 httpx==0.28.1
 openpyxl==3.1.5
-google-genai>=2.34.0,<3.0.0
+google-genai>=3.0.0,<4.0.0
 google-api-python-client==2.201.0
 google-auth-oauthlib==1.5.0
-boto3>=1.43.123
+boto3>=1.43.125
 # NIIMBOT printer support
 pillow>=13.0.0
 pyserial==3.5
