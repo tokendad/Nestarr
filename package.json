@@ -22,5 +22,5 @@
   "overrides": {
     "postcss": ">=8.5.10"
   },
-  "version": "8.1.2"
+  "version": "8.1.3"
 }
